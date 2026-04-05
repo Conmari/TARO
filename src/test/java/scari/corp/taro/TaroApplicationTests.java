@@ -1,4 +1,4 @@
-package scari.corp.TARO;
+package scari.corp.taro;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
