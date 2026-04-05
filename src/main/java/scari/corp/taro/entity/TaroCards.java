@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import scari.corp.taro.enums.Arcana;
 
 @Entity
-@Table(name = "tero_cards")
+@Table(name = "taro_cards")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
