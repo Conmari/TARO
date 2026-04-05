@@ -1,0 +1,172 @@
+[
+  {
+    "name": "Шут/The Fool",
+    "arcana": "MAJOR",
+    "number": 0,
+    "uprightMeaning": "старт чего-то нового, начала движения, создания условий, усилий или потоков. Карта несет смысл спонтанности, неожиданности, душевного обновления",
+    "reversedMeaning": "неоправданные, скоропалительные, необдуманные решения, неподготовленность к событиям, неприятные сюрпризы, нежелание расстаться с прошлым, обреченность"
+  },
+  {
+    "name": "Маг/The Magician",
+    "arcana": "MAJOR",
+    "number": 1,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Жрица/The High Priestess",
+    "arcana": "MAJOR",
+    "number": 2,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Императрица/The Empress",
+    "arcana": "MAJOR",
+    "number": 3,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Император/The Emperor",
+    "arcana": "MAJOR",
+    "number": 4,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Верховный жрец/The Hierophant",
+    "arcana": "MAJOR",
+    "number": 5,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Влюбленные/The Lovers",
+    "arcana": "MAJOR",
+    "number": 6,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Колесница/The Chariot",
+    "arcana": "MAJOR",
+    "number": 7,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Справедливость/Justice",
+    "arcana": "MAJOR",
+    "number": 8,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Отшельник/The Hermit",
+    "arcana": "MAJOR",
+    "number": 9,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Колесо Фортуны/Wheel of Fortune",
+    "arcana": "MAJOR",
+    "number": 10,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Сила/Strength",
+    "arcana": "MAJOR",
+    "number": 11,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Повешенный /The Hanged Man",
+    "arcana": "MAJOR",
+    "number": 12,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Смерть/Death",
+    "arcana": "MAJOR",
+    "number": 13,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Умеренность/Temperance",
+    "arcana": "MAJOR",
+    "number": 14,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Дьявол/The Devil",
+    "arcana": "MAJOR",
+    "number": 15,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Башня/The Tower",
+    "arcana": "MAJOR",
+    "number": 16,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Звезда/The Star",
+    "arcana": "MAJOR",
+    "number": 17,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Луна/The Moon",
+    "arcana": "MAJOR",
+    "number": 18,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Солнце/The Sun",
+    "arcana": "MAJOR",
+    "number": 19,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Суд/Judgement",
+    "arcana": "MAJOR",
+    "number": 20,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Мир/The World",
+    "arcana": "MAJOR",
+    "number": 21,
+    "uprightMeaning": "",
+    "reversedMeaning": ""
+  },
+  {
+    "name": "Туз Жезлов/Ace of Wands",
+    "arcana": "MINOR",
+    "suit": "Wands",
+    "number": 1,
+    "uprightMeaning": "...",
+    "reversedMeaning": "..."
+  },
+  {
+    "name": "Двойка Жезлов/Two of Wands",
+    "arcana": "MINOR",
+    "suit": "Wands",
+    "number": 2,
+    "uprightMeaning": "...",
+    "reversedMeaning": "..."
+  }
+]
