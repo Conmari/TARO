@@ -31,4 +31,11 @@ public class TaroHistory {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Column(name = "session_id")
+    private String sessionId;
 }
