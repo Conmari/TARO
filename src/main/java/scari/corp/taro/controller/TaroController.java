@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import scari.corp.taro.dto.CardResponseDto;
+import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
 import scari.corp.taro.service.TaroService;
 

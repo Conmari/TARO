@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import scari.corp.taro.dto.CardResponseDto;
+import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
 import scari.corp.taro.dto.UserDto;
 import scari.corp.taro.entity.TaroCards;

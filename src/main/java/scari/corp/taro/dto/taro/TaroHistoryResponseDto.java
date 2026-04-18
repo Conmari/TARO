@@ -1,7 +1,6 @@
 package scari.corp.taro.dto.taro;
 
 import org.springframework.lang.Nullable;
-import scari.corp.taro.dto.CardResponseDto;
 import scari.corp.taro.dto.UserDto;
 import scari.corp.taro.enums.LayoutType;
 

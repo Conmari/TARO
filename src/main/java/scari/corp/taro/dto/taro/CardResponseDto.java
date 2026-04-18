@@ -1,4 +1,4 @@
-package scari.corp.taro.dto;
+package scari.corp.taro.dto.taro;
 
 import scari.corp.taro.entity.TaroCards;
 
