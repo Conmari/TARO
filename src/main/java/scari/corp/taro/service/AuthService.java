@@ -31,7 +31,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public void register(RegisterRequest request, String sessionId) {
+    public void register(RegisterRequest request, String sessionId, HttpServletRequest servletRequest) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь уже существует");
         }
@@ -40,6 +40,17 @@ public class AuthService {
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.save(user);
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(request.username(), request.password());
+        Authentication authentication = authenticationManager.authenticate(authToken);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        servletRequest.getSession().setAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                context
+        );
 
         historyRepository.linkSessionToUser(user, sessionId);
         log.info("Пользователь зарегистрирован: {}", request.username());
