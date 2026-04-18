@@ -28,12 +28,12 @@ public class TaroService {
 
     private CardResponseDto toCardResponseDto(TaroCards card) {
         return new CardResponseDto(
-                card.getName(),
+                card.getNameRu(),
                 card.getArcana().name(),
                 card.getSuit(),
                 card.getNumber(),
-                card.getUprightMeaning(),
-                card.getReversedMeaning()
+                card.getMeanings().getUpright(),
+                card.getMeanings().getReversed()
         );
     }
 }
