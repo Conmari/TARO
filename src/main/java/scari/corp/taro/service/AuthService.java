@@ -54,18 +54,12 @@ public class AuthService {
     public void login(LoginRequest request, HttpServletRequest servletRequest) {
         String sessionId = servletRequest.getSession().getId();
 
-        servletRequest.getSession().setAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                context
-        );
         authenticateAndStoreSecurityContext(request.username(), request.password(), servletRequest);
 
-        User user = userRepository.findByUsername(request.username())
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new NoSuchElementException("Пользователь не найден"));
 
-        // 3. Привязать сессию к пользователю в истории
         historyRepository.linkSessionToUser(user, sessionId);
         log.info("Пользователь вошёл в систему: {}", request.username());
     }
