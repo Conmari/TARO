@@ -21,8 +21,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .csrf(csrf -> csrf.disable())
+                .logout(logout -> logout.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login", "/api/v1/taro/**").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/logout", "/api/v1/taro/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin.disable())

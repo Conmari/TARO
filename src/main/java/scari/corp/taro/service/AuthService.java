@@ -65,8 +65,23 @@ public class AuthService {
         User user = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new NoSuchElementException("Пользователь не найден"));
 
+        // 3. Привязать сессию к пользователю в истории
         historyRepository.linkSessionToUser(user, sessionId);
         log.info("Пользователь вошёл в систему: {}", request.username());
+    }
+
+    @Transactional
+    public void logout(HttpServletRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (auth != null) ? auth.getName() : "unknown";
+
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+
+        log.info("Пользователь вышел из системы: {}", username);
     }
 
     private void authenticateAndStoreSecurityContext(String username, String password, HttpServletRequest request) {
