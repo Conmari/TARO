@@ -26,17 +26,16 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request,
                                       HttpServletRequest req) {
         log.debug("Попытка регистрации нового пользователя: {}", request.username());
-        authService.register(request, req.getSession().getId(), req);
+        authService.register(request, req);
 
         return ResponseEntity.ok(new ApiResponse("Регистрация успешна"));
-
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
                                    HttpServletRequest req) {
         log.debug("Попытка входа: {}", request.username());
-        authService.login(request, req.getSession().getId(), req);
+        authService.login(request, req);
 
         return ResponseEntity.ok(new ApiResponse("Вход успешен"));
     }

@@ -1,6 +1,7 @@
 package scari.corp.taro.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,7 +32,9 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public void register(RegisterRequest request, String sessionId, HttpServletRequest servletRequest) {
+    public void register(RegisterRequest request, HttpServletRequest servletRequest) {
+        String sessionId = servletRequest.getSession().getId();
+
         if (userRepository.findByUsername(request.username()).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь уже существует");
         }
@@ -41,38 +44,43 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.save(user);
 
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(request.username(), request.password());
-        Authentication authentication = authenticationManager.authenticate(authToken);
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-        servletRequest.getSession().setAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                context
-        );
+        authenticateAndStoreSecurityContext(request.username(), request.password(), servletRequest);
 
         historyRepository.linkSessionToUser(user, sessionId);
         log.info("Пользователь зарегистрирован: {}", request.username());
     }
 
     @Transactional
-    public void login(LoginRequest request, String sessionId, HttpServletRequest servletRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
+    public void login(LoginRequest request, HttpServletRequest servletRequest) {
+        String sessionId = servletRequest.getSession().getId();
 
         servletRequest.getSession().setAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 context
         );
+        authenticateAndStoreSecurityContext(request.username(), request.password(), servletRequest);
 
         User user = userRepository.findByUsername(request.username())
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new NoSuchElementException("Пользователь не найден"));
+
         historyRepository.linkSessionToUser(user, sessionId);
         log.info("Пользователь вошёл в систему: {}", request.username());
+    }
+
+    private void authenticateAndStoreSecurityContext(String username, String password, HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(username, password);
+        Authentication authentication = authenticationManager.authenticate(authToken);
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+
+        SecurityContextHolder.setContext(context);
+        request.getSession().setAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                context
+        );
     }
 }
