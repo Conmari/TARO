@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import scari.corp.taro.embeddable.Meanings;
 import scari.corp.taro.enums.Arcana;
 
 @Entity
@@ -18,7 +19,10 @@ public class TaroCards {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String name;
+    private String nameEn;
+
+    @Column(nullable = false, unique = true)
+    private String nameRu;
 
     @Enumerated(EnumType.STRING)
     private Arcana arcana;
@@ -27,9 +31,7 @@ public class TaroCards {
 
     private Integer number;
 
-    @Column(length = 2000)
-    private String uprightMeaning;
+    @Embedded
+    private Meanings meanings;
 
-    @Column(length = 2000)
-    private String reversedMeaning;
 }
