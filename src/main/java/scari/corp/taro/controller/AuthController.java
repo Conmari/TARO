@@ -4,15 +4,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import scari.corp.taro.dto.auth.ApiResponse;
 import scari.corp.taro.dto.auth.LoginRequest;
 import scari.corp.taro.dto.auth.RegisterRequest;
 import scari.corp.taro.service.AuthService;
+
+import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -44,5 +45,14 @@ public class AuthController {
     public ResponseEntity<?> logout(HttpServletRequest request) {
         authService.logout(request);
         return ResponseEntity.ok(new ApiResponse("Выход выполнен"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Principal principal) {
+        if (principal == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse("Не авторизован"));
+        }
+        return ResponseEntity.ok(Map.of("username", principal.getName()));
     }
 }

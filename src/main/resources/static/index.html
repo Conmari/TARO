@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Таро — гадание на картах</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2a2a3a);
+            margin: 0;
+            min-height: 100vh;
+            color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(30,30,40,0.8);
+            border-radius: 28px;
+            padding: 24px;
+        }
+        .card {
+            background: #2c2c3a;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: #6c5ce7;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .logout-btn { background: #e74c3c; }
+        .refresh-btn { background: #3498db; }
+        input {
+            padding: 10px 15px;
+            border-radius: 40px;
+            border: none;
+            background: #3a3a4a;
+            color: white;
+            margin: 8px;
+            width: 200px;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .user-info {
+            background: #3a3a4e;
+            border-radius: 60px;
+            padding: 8px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .auth-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .error-msg { color: #ff8888; background: #4a2a2a; padding: 8px 15px; border-radius: 40px; }
+        .history-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .history-item {
+            background: #252533;
+            border-radius: 14px;
+            padding: 12px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .card-name { font-weight: bold; color: #ffb347; }
+        .date { font-size: 0.8rem; color: #aaa; }
+        .load-more-btn {
+            display: block;
+            margin: 16px auto 0;
+            background: #3498db;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="flex-between">
+        <h1>🔮 Таро. Гадание на картах</h1>
+        <div id="userWidget" class="user-info">🔒 Проверка...</div>
+    </div>
+
+    <!-- Блок входа/регистрации -->
+    <div id="authBlock" class="card">
+        <h3>🎴 Вход / Регистрация</h3>
+        <div class="auth-form">
+            <input type="text" id="loginUsername" placeholder="Логин">
+            <input type="password" id="loginPassword" placeholder="Пароль">
+            <button id="loginBtn">Войти</button>
+        </div>
+        <div class="auth-form">
+            <input type="text" id="regUsername" placeholder="Логин">
+            <input type="password" id="regPassword" placeholder="Пароль">
+            <button id="registerBtn">Зарегистрироваться</button>
+        </div>
+        <div id="authError" class="error-msg" style="display: none;"></div>
+    </div>
+
+    <!-- Кнопки управления -->
+    <div style="text-align: center; margin: 20px 0;">
+        <button id="drawCardBtn" style="font-size: 1.2rem;">✨ Вытянуть карту ✨</button>
+        <button id="refreshHistoryBtn" class="refresh-btn">🔄 Обновить историю</button>
+    </div>
+
+    <!-- Результат гадания -->
+    <div class="card">
+        <h3>🎴 Ваша карта</h3>
+        <div id="cardContent">Нажмите «Вытянуть карту»</div>
+    </div>
+
+    <!-- История гаданий (с пагинацией) -->
+    <div class="card">
+        <h3>📜 История гаданий</h3>
+        <div id="historyList" class="history-list">Загрузка...</div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '';
+    let currentUser = null;
+    let currentPage = 0;
+    let isLoading = false;
+    let hasMore = true;
+    let allHistory = [];
+
+    async function apiRequest(endpoint, method, body = null) {
+        const options = {
+            method,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (body) options.body = JSON.stringify(body);
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        let data;
+        try { data = await res.json(); } catch(e) { data = { message: await res.text() }; }
+        if (!res.ok) {
+            const err = new Error(data.message || `Ошибка ${res.status}`);
+            err.status = res.status;
+            throw err;
+        }
+        return data;
+    }
+
+    async function checkAuth() {
+        try {
+            const data = await apiRequest('/auth/me', 'GET');
+            currentUser = data.username;
+            return true;
+        } catch (err) {
+            if (err.status === 401) {
+                currentUser = null;
+                return false;
+            }
+            currentUser = null;
+            return false;
+        }
+    }
+
+    async function updateUserWidget() {
+        const isAuth = await checkAuth();
+        const widget = document.getElementById('userWidget');
+        const authBlock = document.getElementById('authBlock');
+        if (isAuth && currentUser) {
+            widget.innerHTML = `<span>👤 ${escapeHtml(currentUser)}</span> <button id="logoutBtn" class="logout-btn">Выйти</button>`;
+            authBlock.style.display = 'none';
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) logoutBtn.onclick = logout;
+        } else {
+            widget.innerHTML = `<span>🔒 Не авторизован</span>`;
+            authBlock.style.display = 'block';
+        }
+    }
+
+    async function loadHistory(reset = true) {
+        if (reset) {
+            currentPage = 0;
+            allHistory = [];
+            hasMore = true;
+            document.getElementById('historyList').innerHTML = '';
+        }
+        if (!hasMore || isLoading) return;
+
+        isLoading = true;
+        const container = document.getElementById('historyList');
+        if (currentPage === 0) container.innerHTML = 'Загрузка истории...';
+
+        try {
+            const response = await apiRequest(`/api/v1/taro/history?page=${currentPage}&size=10`, 'GET');
+            // response - это Page-объект с полями content, last, totalPages и т.д.
+            const content = response.content || [];
+            if (content.length === 0) {
+                if (currentPage === 0) container.innerHTML = '<p>📭 История пуста. Вытяните первую карту!</p>';
+                hasMore = false;
+                isLoading = false;
+                return;
+            }
+            allHistory = allHistory.concat(content);
+            hasMore = !response.last;   // если last === true, больше нет страниц
+            renderHistory(allHistory);
+            currentPage++;
+        } catch (err) {
+            container.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    function renderHistory(history) {
+        const container = document.getElementById('historyList');
+        if (!history || history.length === 0) {
+            container.innerHTML = '<p>📭 История пуста. Вытяните первую карту!</p>';
+            return;
+        }
+
+        const items = history.map(item => {
+            const card = item.card;
+            const date = new Date(item.createdAt).toLocaleString();
+            const meaningHtml = `☀️ ${escapeHtml(card.upright)}<br>🌙 ${escapeHtml(card.reversed)}`;
+            return `
+                <div class="history-item">
+                    <div style="flex: 1;">
+                        <div>
+                            <span class="card-name">${escapeHtml(card.nameRu)}</span>
+                            <span style="font-size:0.8rem; color:#aaa;"> ${item.layoutType}</span>
+                        </div>
+                        <div style="font-size:0.85rem; margin-top: 6px; color: #ccc;">
+                            ${meaningHtml}
+                        </div>
+                    </div>
+                    <div class="date">${date}</div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = items;
+        // Показываем кнопку "Загрузить ещё" только если есть ещё страницы (hasMore === true)
+        if (hasMore) {
+            const loadMoreBtn = document.createElement('button');
+            loadMoreBtn.textContent = 'Загрузить ещё';
+            loadMoreBtn.className = 'refresh-btn load-more-btn';
+            loadMoreBtn.onclick = () => loadHistory(false);
+            container.appendChild(loadMoreBtn);
+        }
+    }
+
+    async function drawCard() {
+        const cardDiv = document.getElementById('cardContent');
+        cardDiv.innerHTML = '✨ Гадаем...';
+        try {
+            const card = await apiRequest('/api/v1/taro/random', 'GET');
+            cardDiv.innerHTML = `
+                <div style="font-size:1.5rem; font-weight:bold;">${escapeHtml(card.nameRu)}</div>
+                <div>${card.arcana} ${card.suit ? '· ' + card.suit : ''} · №${card.number}</div>
+                <div style="margin-top:12px;"><strong>☀️ Прямое значение:</strong> ${escapeHtml(card.upright)}</div>
+                <div style="margin-top:8px;"><strong>🌙 Перевёрнутое значение:</strong> ${escapeHtml(card.reversed)}</div>
+            `;
+            await loadHistory(true); // сброс и загрузка первой страницы
+        } catch (err) {
+            cardDiv.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
+        }
+    }
+
+    async function login(username, password) {
+        await apiRequest('/auth/login', 'POST', { username, password });
+        await updateUserWidget();
+        await loadHistory(true);
+    }
+
+    async function register(username, password) {
+        await apiRequest('/auth/register', 'POST', { username, password });
+        await updateUserWidget();
+        await loadHistory(true);
+    }
+
+    async function logout() {
+        await apiRequest('/auth/logout', 'POST');
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regPassword').value = '';
+        const authError = document.getElementById('authError');
+        if (authError) {
+            authError.style.display = 'none';
+            authError.textContent = '';
+        }
+        await updateUserWidget();
+        await loadHistory(true);
+        document.getElementById('cardContent').innerHTML = 'Нажмите «Вытянуть карту»';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function showAuthError(msg) {
+        const div = document.getElementById('authError');
+        div.textContent = msg;
+        div.style.display = 'block';
+        setTimeout(() => div.style.display = 'none', 4000);
+    }
+
+    document.getElementById('drawCardBtn').onclick = drawCard;
+    document.getElementById('refreshHistoryBtn').onclick = () => loadHistory(true);
+
+    document.getElementById('loginBtn').onclick = async () => {
+        const u = document.getElementById('loginUsername').value.trim();
+        const p = document.getElementById('loginPassword').value.trim();
+        if (!u || !p) { showAuthError('Введите логин и пароль'); return; }
+        try { await login(u, p); } catch(e) { showAuthError(e.message); }
+    };
+    document.getElementById('registerBtn').onclick = async () => {
+        const u = document.getElementById('regUsername').value.trim();
+        const p = document.getElementById('regPassword').value.trim();
+        if (!u || !p) { showAuthError('Введите логин и пароль'); return; }
+        try { await register(u, p); } catch(e) { showAuthError(e.message); }
+    };
+
+    updateUserWidget();
+    loadHistory(true);
+</script>
+</body>
+</html>

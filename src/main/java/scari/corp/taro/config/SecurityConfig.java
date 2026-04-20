@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .logout(logout -> logout.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login", "/auth/logout", "/api/v1/taro/**").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/logout", "/api/v1/taro/**", "/index.html", "/", "/static/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin.disable())
