@@ -1,5 +1,7 @@
 package scari.corp.taro.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,9 +17,9 @@ import java.util.List;
 public interface TaroHistoryRepository extends JpaRepository<TaroHistory, Long> {
     List<TaroHistory> findAllByOrderByCreatedAtDesc();
 
-    List<TaroHistory> findByUserOrderByCreatedAtDesc(User user);
+    Page<TaroHistory> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
-    List<TaroHistory> findBySessionIdOrderByCreatedAtDesc(String sessionId);
+    Page<TaroHistory> findBySessionIdOrderByCreatedAtDesc(String sessionId, Pageable pageable);
 
     @Modifying
     @Transactional

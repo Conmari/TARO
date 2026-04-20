@@ -2,11 +2,14 @@ package scari.corp.taro.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import scari.corp.taro.dto.UserDto;
 import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
-import scari.corp.taro.dto.UserDto;
 import scari.corp.taro.entity.TaroCards;
 import scari.corp.taro.entity.TaroHistory;
 import scari.corp.taro.entity.User;
@@ -16,7 +19,6 @@ import scari.corp.taro.repository.TaroHistoryRepository;
 import scari.corp.taro.repository.UserRepository;
 
 import java.security.Principal;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -79,26 +81,21 @@ public class TaroService {
     /**
      * Возвращает последние N гаданий.
      */
-    public List<TaroHistoryResponseDto> getLastReadings(Principal principal, HttpServletRequest req, int limit) {
+    public Page<TaroHistoryResponseDto> getLastReadings(Principal principal, HttpServletRequest req, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TaroHistory> historyPage;
+
         if (principal != null) {
             String username = principal.getName();
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new IllegalStateException("Пользователь не найден: " + username));
-
-            return readingRepository.findByUserOrderByCreatedAtDesc(user)
-                    .stream()
-                    .limit(limit)
-                    .map(this::toHistoryResponseDto)
-
-                    .toList();
+                    .orElseThrow(() -> new IllegalStateException("Пользователь " + username + " не найден"));
+            historyPage = readingRepository.findByUserOrderByCreatedAtDesc(user, pageable);
         } else {
             String sessionId = req.getSession().getId();
-            return readingRepository.findBySessionIdOrderByCreatedAtDesc(sessionId)
-                    .stream()
-                    .limit(limit)
-                    .map(this::toHistoryResponseDto)
-                    .toList();
+            historyPage = readingRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, pageable);
         }
+
+        return historyPage.map(this::toHistoryResponseDto);
     }
 
     private TaroHistoryResponseDto toHistoryResponseDto(TaroHistory history) {
