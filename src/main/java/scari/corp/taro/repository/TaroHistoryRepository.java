@@ -11,11 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import scari.corp.taro.entity.TaroHistory;
 import scari.corp.taro.entity.User;
 
-import java.util.List;
-
 @Repository
 public interface TaroHistoryRepository extends JpaRepository<TaroHistory, Long> {
-    List<TaroHistory> findAllByOrderByCreatedAtDesc();
 
     Page<TaroHistory> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
