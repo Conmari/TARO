@@ -1,36 +1,49 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: taro_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - taro_network
+
   backend:
     build: .
     container_name: taro_app
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8080:8080"
     restart: always
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taro_db
+      SPRING_DATASOURCE_USERNAME: taro_user
+      SPRING_DATASOURCE_PASSWORD: SuperUser!testPas
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 512M
+    networks:
+      - taro_network
 
   db:
     image: postgres:18-alpine
     container_name: taro_db
     environment:
       POSTGRES_DB: taro_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: taro_user
+      POSTGRES_PASSWORD: SuperUser!testPas
     volumes:
       - pgdata:/var/lib/postgresql
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d taro_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U taro_user -d taro_db" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -39,7 +52,13 @@ services:
         limits:
           cpus: '1.0'
           memory: 512M
+    networks:
+      - taro_network
 
 volumes:
   pgdata:
     name: taro_pgdata
+
+networks:
+  taro_network:
+    driver: bridge
