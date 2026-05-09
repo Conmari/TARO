@@ -40,4 +40,5 @@ docker-compose up --build
 ```
 
 ## Важно <a name="важно" id="важно"></a>
-БД наполнится данными из `taro_cards.json`
+БД наполнится данными из `taro_cards.json`  
+Генерация самоподписанного сертификата происходит в `docker-compose.yml` секция `ssl_gen`  
