@@ -1,36 +1,72 @@
 services:
+  # Сервис-утилита для генерации сертификатов
+  ssl_gen:
+    image: alpine:latest
+    container_name: taro_ssl_gen
+    volumes:
+      - ./ssl:/etc/nginx/ssl
+    entrypoint: /bin/sh -c "apk add --no-cache openssl && \
+      if [ ! -f /etc/nginx/ssl/fullchain.pem ]; then \
+      SAN_LIST=$$(echo ${SERVER_IP} | sed 's/,/,IP:/g' | sed 's/^/IP:/'); \
+      openssl req -x509 -newkey rsa:4096 -sha256 -nodes -days 365 \
+      -keyout /etc/nginx/ssl/privkey.pem \
+      -out /etc/nginx/ssl/fullchain.pem \
+      -subj '/CN=taro-project' \
+      -addext \"subjectAltName = DNS:localhost,$${SAN_LIST}\"; \
+      chmod 600 /etc/nginx/ssl/privkey.pem; \
+      chmod 644 /etc/nginx/ssl/fullchain.pem; \
+      fi"
+
+  nginx:
+    image: nginx:alpine
+    container_name: taro_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      ssl_gen:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
+    restart: always
+    networks:
+      - taro_network
+
   backend:
     build: .
     container_name: taro_app
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8080:8080"
     restart: always
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taro_db
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 512M
+    networks:
+      - taro_network
 
   db:
     image: postgres:18-alpine
     container_name: taro_db
     environment:
-      POSTGRES_DB: taro_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d taro_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -39,7 +75,13 @@ services:
         limits:
           cpus: '1.0'
           memory: 512M
+    networks:
+      - taro_network
 
 volumes:
   pgdata:
     name: taro_pgdata
+
+networks:
+  taro_network:
+    driver: bridge
