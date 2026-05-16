@@ -10,7 +10,10 @@ import scari.corp.taro.enums.LayoutType;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "taro_history")
+@Table(name = "taro_history", indexes = {
+        @Index(name = "idx_history_user_date", columnList = "user_id, created_at DESC"),
+        @Index(name = "idx_history_session_date", columnList = "session_id, created_at DESC")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
