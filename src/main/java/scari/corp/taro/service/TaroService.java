@@ -2,6 +2,7 @@ package scari.corp.taro.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,17 +15,19 @@ import scari.corp.taro.entity.TaroCards;
 import scari.corp.taro.entity.TaroHistory;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.enums.LayoutType;
-import scari.corp.taro.repository.TaroCardsRepository;
 import scari.corp.taro.repository.TaroHistoryRepository;
 import scari.corp.taro.repository.UserRepository;
 
 import java.security.Principal;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaroService {
 
-    private final TaroCardsRepository repository;
+    private final TaroCacheService taroCacheService;
     private final TaroHistoryRepository readingRepository;
     private final UserRepository userRepository;
 
@@ -35,8 +38,11 @@ public class TaroService {
      */
     @Transactional
     public CardResponseDto getRandomCard(Principal principal, HttpServletRequest req) {
-        TaroCards card = repository.findRandomCard();
-        if (card == null) throw new IllegalStateException("Колода пуста");
+        List<TaroCards> allCards = taroCacheService.getAllCards();
+        if (allCards.isEmpty()) throw new IllegalStateException("Колода пуста");
+
+        int randomIndex = ThreadLocalRandom.current().nextInt(allCards.size());
+        TaroCards card = allCards.get(randomIndex);
 
         if (principal != null) {
             String username = principal.getName();
