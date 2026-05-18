@@ -7,13 +7,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import scari.corp.taro.dto.UserDto;
 import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
 import scari.corp.taro.entity.TaroCards;
 import scari.corp.taro.entity.TaroHistory;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.enums.LayoutType;
+import scari.corp.taro.mapper.TaroMapper;
 import scari.corp.taro.repository.TaroHistoryRepository;
 import scari.corp.taro.repository.UserRepository;
 
@@ -28,6 +28,7 @@ public class TaroService {
     private final TaroCacheService taroCacheService;
     private final TaroHistoryRepository readingRepository;
     private final UserRepository userRepository;
+    private final TaroMapper taroMapper;
 
     /**
      * Возвращает случайную карту из колоды в виде DTO.
@@ -49,7 +50,7 @@ public class TaroService {
         } else {
             saveHistoryForSession(card, sessionId);
         }
-        return toCardResponseDto(card);
+        return taroMapper.toCardResponseDto(card);
     }
 
     private void saveHistoryForUser(TaroCards card, User user) {
@@ -68,17 +69,6 @@ public class TaroService {
         readingRepository.save(history);
     }
 
-    private CardResponseDto toCardResponseDto(TaroCards card) {
-        return new CardResponseDto(
-                card.getNameRu(),
-                card.getArcana().name(),
-                card.getSuit(),
-                card.getNumber(),
-                card.getMeanings().getUpright(),
-                card.getMeanings().getReversed()
-        );
-    }
-
     /**
      * Возвращает последние N гаданий.
      */
@@ -95,21 +85,6 @@ public class TaroService {
             historyPage = readingRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, pageable);
         }
 
-        return historyPage.map(this::toHistoryResponseDto);
-    }
-
-    private TaroHistoryResponseDto toHistoryResponseDto(TaroHistory history) {
-        CardResponseDto cardDto = toCardResponseDto(history.getCard());
-        UserDto userDto = null;
-        if (history.getUser() != null) {
-            userDto = new UserDto(history.getUser().getId(), history.getUser().getUsername());
-        }
-        return new TaroHistoryResponseDto(
-                history.getId(),
-                history.getLayoutType(),
-                cardDto,
-                history.getCreatedAt(),
-                userDto
-        );
+        return historyPage.map(taroMapper::toHistoryResponseDto);
     }
 }
