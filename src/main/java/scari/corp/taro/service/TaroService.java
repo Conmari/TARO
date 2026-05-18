@@ -1,6 +1,5 @@
 package scari.corp.taro.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,7 +17,6 @@ import scari.corp.taro.enums.LayoutType;
 import scari.corp.taro.repository.TaroHistoryRepository;
 import scari.corp.taro.repository.UserRepository;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -37,24 +35,21 @@ public class TaroService {
      * @return {@link CardResponseDto} с данными карты
      */
     @Transactional
-    public CardResponseDto getRandomCard(Principal principal, HttpServletRequest req) {
+    public CardResponseDto getRandomCard(String username, String sessionId) {
         List<TaroCards> allCards = taroCacheService.getAllCards();
         if (allCards.isEmpty()) throw new IllegalStateException("Колода пуста");
 
         int randomIndex = ThreadLocalRandom.current().nextInt(allCards.size());
         TaroCards card = allCards.get(randomIndex);
 
-        if (principal != null) {
-            String username = principal.getName();
+        if (username != null) {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalStateException("Пользователь не найден: " + username));
             saveHistoryForUser(card, user);
         } else {
-            String sessionId = req.getSession().getId();
             saveHistoryForSession(card, sessionId);
         }
         return toCardResponseDto(card);
-
     }
 
     private void saveHistoryForUser(TaroCards card, User user) {
@@ -87,17 +82,16 @@ public class TaroService {
     /**
      * Возвращает последние N гаданий.
      */
-    public Page<TaroHistoryResponseDto> getLastReadings(Principal principal, HttpServletRequest req, int page, int size) {
+    @Transactional(readOnly = true)
+    public Page<TaroHistoryResponseDto> getLastReadings(String username, String sessionId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<TaroHistory> historyPage;
 
-        if (principal != null) {
-            String username = principal.getName();
+        if (username != null) {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalStateException("Пользователь " + username + " не найден"));
             historyPage = readingRepository.findByUserOrderByCreatedAtDesc(user, pageable);
         } else {
-            String sessionId = req.getSession().getId();
             historyPage = readingRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, pageable);
         }
 
