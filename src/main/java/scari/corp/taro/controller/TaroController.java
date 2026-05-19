@@ -28,7 +28,9 @@ public class TaroController {
     @GetMapping("/random")
     public CardResponseDto randomCard(Principal principal,
                                       HttpServletRequest req) {
-        return taroService.getRandomCard(principal, req);
+        String username = (principal != null) ? principal.getName() : null;
+        String sessionId = req.getSession().getId();
+        return taroService.getRandomCard(username, sessionId);
     }
 
     @GetMapping("/history")
@@ -37,6 +39,9 @@ public class TaroController {
             @RequestParam(defaultValue = "10") int size,
             Principal principal,
             HttpServletRequest req) {
-        return taroService.getLastReadings(principal, req, page, size);
+
+        String username = (principal != null) ? principal.getName() : null;
+        String sessionId = req.getSession().getId();
+        return taroService.getLastReadings(username, sessionId, page, size);
     }
 }
