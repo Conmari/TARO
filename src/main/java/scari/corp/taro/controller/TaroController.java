@@ -45,7 +45,7 @@ public class TaroController {
         if (!rateLimitingService.tryConsume(limitKey)) {
             return ResponseEntity
                     .status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(new ApiResponse("Вы совершаете запросы слишком часто. Пожалуйста, подождите 5 секунд."));
+                    .body(new ApiResponse("Вы совершаете запросы слишком часто. Пожалуйста, подождите 3 секунды."));
         }
 
         CardResponseDto card = taroService.getRandomCard(username, sessionId);
