@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TaroService {
 
     private final TaroCacheService taroCacheService;
-    private final TaroHistoryRepository readingRepository;
+    private final TaroHistoryRepository taroHistoryRepository;
     private final UserRepository userRepository;
     private final TaroMapper taroMapper;
 
@@ -58,7 +58,7 @@ public class TaroService {
         reading.setLayoutType(LayoutType.ONE_CARD);
         reading.setCard(card);
         reading.setUser(user);
-        readingRepository.save(reading);
+        taroHistoryRepository.save(reading);
     }
 
     private void saveHistoryForSession(TaroCards card, String sessionId) {
@@ -66,7 +66,7 @@ public class TaroService {
         history.setLayoutType(LayoutType.ONE_CARD);
         history.setCard(card);
         history.setSessionId(sessionId);
-        readingRepository.save(history);
+        taroHistoryRepository.save(history);
     }
 
     /**
@@ -80,9 +80,9 @@ public class TaroService {
         if (username != null) {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalStateException("Пользователь " + username + " не найден"));
-            historyPage = readingRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+            historyPage = taroHistoryRepository.findByUserOrderByCreatedAtDesc(user, pageable);
         } else {
-            historyPage = readingRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, pageable);
+            historyPage = taroHistoryRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, pageable);
         }
 
         return historyPage.map(taroMapper::toHistoryResponseDto);
