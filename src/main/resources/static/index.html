@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>Таро — гадание на картах</title>
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #1e1e2f, #2a2a3a);
@@ -13,19 +16,22 @@
             color: #f0f0f0;
             padding: 20px;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgba(30,30,40,0.8);
+            background: rgba(30, 30, 40, 0.8);
             border-radius: 28px;
             padding: 24px;
         }
+
         .card {
             background: #2c2c3a;
             border-radius: 20px;
             padding: 20px;
             margin: 20px 0;
         }
+
         button {
             background: #6c5ce7;
             border: none;
@@ -35,9 +41,35 @@
             border-radius: 40px;
             cursor: pointer;
             margin: 5px;
+            transition: all 0.3s ease;
         }
-        .logout-btn { background: #e74c3c; }
-        .refresh-btn { background: #3498db; }
+
+        button:disabled {
+            background: #4a4a5a !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+        }
+
+        .refresh-btn {
+            background: #3498db;
+        }
+
+        select {
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: 2px solid #6c5ce7;
+            background: #2c2c3a;
+            color: white;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+
         input {
             padding: 10px 15px;
             border-radius: 40px;
@@ -47,12 +79,14 @@
             margin: 8px;
             width: 200px;
         }
+
         .flex-between {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
         }
+
         .user-info {
             background: #3a3a4e;
             border-radius: 60px;
@@ -61,6 +95,7 @@
             align-items: center;
             gap: 15px;
         }
+
         .auth-form {
             display: flex;
             flex-wrap: wrap;
@@ -68,11 +103,20 @@
             gap: 12px;
             margin-bottom: 10px;
         }
-        .error-msg { color: #ff8888; background: #4a2a2a; padding: 8px 15px; border-radius: 40px; }
+
+        .error-msg {
+            color: #ff8888;
+            background: #4a2a2a;
+            padding: 8px 15px;
+            border-radius: 40px;
+            margin-top: 10px;
+        }
+
         .history-list {
             max-height: 500px;
             overflow-y: auto;
         }
+
         .history-item {
             background: #252533;
             border-radius: 14px;
@@ -81,13 +125,71 @@
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
+            border-left: 4px solid #6c5ce7;
         }
-        .card-name { font-weight: bold; color: #ffb347; }
-        .date { font-size: 0.8rem; color: #aaa; }
+
+        .card-name {
+            font-weight: bold;
+            color: #ffb347;
+        }
+
+        .date {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
         .load-more-btn {
             display: block;
             margin: 16px auto 0;
             background: #3498db;
+        }
+
+        /* Стилизация отображения карт на столе */
+        .layout-grid {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .taro-card-wrapper {
+            background: #1e1e28;
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 16px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Эффект физического переворота карты «вверх ногами» */
+        .card-icon {
+            font-size: 3.5rem;
+            margin: 10px 0;
+            display: inline-block;
+            transition: transform 0.5s ease;
+        }
+
+        .reversed-card {
+            transform: rotate(180deg);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .badge-upright {
+            background: #2ecc71;
+            color: #fff;
+        }
+
+        .badge-reversed {
+            background: #e67e22;
+            color: #fff;
         }
     </style>
 </head>
@@ -116,14 +218,18 @@
 
     <!-- Кнопки управления -->
     <div style="text-align: center; margin: 20px 0;">
-        <button id="drawCardBtn" style="font-size: 1.2rem;">✨ Вытянуть карту ✨</button>
+        <select id="layoutTypeSelect">
+            <option value="ONE_CARD">🔮 1 Карта (Карта дня)</option>
+            <option value="THREE_CARDS">🔮 3 Карты (Прошлое / Настоящее / Будущее)</option>
+        </select>
+        <button id="drawCardBtn" style="font-size: 1.2rem;">✨ Вытянуть карты ✨</button>
         <button id="refreshHistoryBtn" class="refresh-btn">🔄 Обновить историю</button>
     </div>
 
     <!-- Результат гадания -->
     <div class="card">
-        <h3>🎴 Ваша карта</h3>
-        <div id="cardContent">Нажмите «Вытянуть карту»</div>
+        <h3>🎴 Ваш расклад</h3>
+        <div id="cardContent" class="layout-grid">Нажмите «Вытянуть карты»</div>
     </div>
 
     <!-- История гаданий (с пагинацией) -->
@@ -145,12 +251,16 @@
         const options = {
             method,
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json'}
         };
         if (body) options.body = JSON.stringify(body);
         const res = await fetch(`${API_BASE}${endpoint}`, options);
         let data;
-        try { data = await res.json(); } catch(e) { data = { message: await res.text() }; }
+        try {
+            data = await res.json();
+        } catch (e) {
+            data = {message: await res.text()};
+        }
         if (!res.ok) {
             const err = new Error(data.message || `Ошибка ${res.status}`);
             err.status = res.status;
@@ -165,10 +275,6 @@
             currentUser = data.username;
             return true;
         } catch (err) {
-            if (err.status === 401) {
-                currentUser = null;
-                return false;
-            }
             currentUser = null;
             return false;
         }
@@ -204,7 +310,6 @@
 
         try {
             const response = await apiRequest(`/api/v1/taro/history?page=${currentPage}&size=10`, 'GET');
-            // response - это Page-объект с полями content, last, totalPages и т.д.
             const content = response.content || [];
             if (content.length === 0) {
                 if (currentPage === 0) container.innerHTML = '<p>📭 История пуста. Вытяните первую карту!</p>';
@@ -213,7 +318,7 @@
                 return;
             }
             allHistory = allHistory.concat(content);
-            hasMore = !response.last;   // если last === true, больше нет страниц
+            hasMore = !response.last;
             renderHistory(allHistory);
             currentPage++;
         } catch (err) {
@@ -230,28 +335,57 @@
             return;
         }
 
-        const items = history.map(item => {
-            const card = item.card;
-            const date = new Date(item.createdAt).toLocaleString();
-            const meaningHtml = `☀️ ${escapeHtml(card.upright)}<br>🌙 ${escapeHtml(card.reversed)}`;
-            return `
-                <div class="history-item">
-                    <div style="flex: 1;">
+        // Бэкенд теперь сам присылает готовые расклады TaroHistoryResponseDto.
+        // Мы просто перебираем их напрямую, без костыльных группировок!
+        const htmlItems = history.map(layout => {
+
+            // Генерируем HTML для карт, которые уже лежат внутри расклада в правильном порядке
+            const cardsHtml = layout.cards.map((card, index) => {
+                const positionText = card.isReversed ? '🌙 Перевёрнутое' : '☀️ Прямое';
+                const badgeClass = card.isReversed ? 'badge-reversed' : 'badge-upright';
+
+                // Добавляем текстовые маркеры для позиций тройного расклада
+                let positionLabel = '';
+                if (layout.layoutType === 'THREE_CARDS') {
+                    if (index === 0) positionLabel = '<span style="color:#3498db; font-weight:bold;">🕒 ПРОШЛОЕ: </span>';
+                    if (index === 1) positionLabel = '<span style="color:#2ecc71; font-weight:bold;">👁️ НАСТОЯЩЕЕ: </span>';
+                    if (index === 2) positionLabel = '<span style="color:#e74c3c; font-weight:bold;">🔮 БУДУЩЕЕ: </span>';
+                }
+
+                return `
+                    <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #3a3a4a;">
                         <div>
+                            ${positionLabel}
                             <span class="card-name">${escapeHtml(card.nameRu)}</span>
-                            <span style="font-size:0.8rem; color:#aaa;"> ${item.layoutType}</span>
+                            <span class="badge ${badgeClass}">${positionText}</span>
                         </div>
-                        <div style="font-size:0.85rem; margin-top: 6px; color: #ccc;">
-                            ${meaningHtml}
+                        <div style="font-size:0.85rem; margin-top: 5px; color: #ccc; line-height: 1.4;">
+                            ${escapeHtml(card.interpretation)}
                         </div>
                     </div>
-                    <div class="date">${date}</div>
+                `;
+            }).join('');
+
+            const isTriple = layout.layoutType === 'THREE_CARDS';
+            const itemStyle = isTriple ? 'border-left: 4px solid #3498db; background: #1f1f2e;' : 'border-left: 4px solid #6c5ce7;';
+            const titleText = isTriple ? '🔮 Расклад из 3 карт' : '🎴 Карта дня';
+            const date = new Date(layout.createdAt).toLocaleString();
+
+            return `
+                <div class="history-item" style="${itemStyle} display: block;">
+                    <div class="flex-between" style="margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">
+                        <span style="font-weight: bold; color: #aaa; font-size: 0.85rem;">${titleText}</span>
+                        <div class="date">${date}</div>
+                    </div>
+                    <div style="width: 100%;">
+                        ${cardsHtml}
+                    </div>
                 </div>
             `;
         }).join('');
 
-        container.innerHTML = items;
-        // Показываем кнопку "Загрузить ещё" только если есть ещё страницы (hasMore === true)
+        container.innerHTML = htmlItems;
+
         if (hasMore) {
             const loadMoreBtn = document.createElement('button');
             loadMoreBtn.textContent = 'Загрузить ещё';
@@ -263,29 +397,82 @@
 
     async function drawCard() {
         const cardDiv = document.getElementById('cardContent');
-        cardDiv.innerHTML = '✨ Гадаем...';
+        const drawBtn = document.getElementById('drawCardBtn');
+        const layoutType = document.getElementById('layoutTypeSelect').value;
+
+        cardDiv.innerHTML = '✨ Перемешиваем колоду и открываем тайны...';
+
         try {
-            const card = await apiRequest('/api/v1/taro/random', 'GET');
-            cardDiv.innerHTML = `
-                <div style="font-size:1.5rem; font-weight:bold;">${escapeHtml(card.nameRu)}</div>
-                <div>${card.arcana} ${card.suit ? '· ' + card.suit : ''} · №${card.number}</div>
-                <div style="margin-top:12px;"><strong>☀️ Прямое значение:</strong> ${escapeHtml(card.upright)}</div>
-                <div style="margin-top:8px;"><strong>🌙 Перевёрнутое значение:</strong> ${escapeHtml(card.reversed)}</div>
-            `;
-            await loadHistory(true); // сброс и загрузка первой страницы
+            const cardsList = await apiRequest(`/api/v1/taro/random?layoutType=${layoutType}`, 'GET');
+
+            cardDiv.innerHTML = cardsList.map((card, index) => {
+                const rotationClass = card.isReversed ? 'reversed-card' : '';
+                const positionTitle = card.isReversed ? '🌙 Перевёрнутая' : '☀️ Прямая';
+
+                let positionLabel = '';
+                if (layoutType === 'THREE_CARDS') {
+                    if (index === 0) positionLabel = '<div style="color:#3498db; font-weight:bold; margin-bottom:5px;">🕒 ПРОШЛОЕ</div>';
+                    if (index === 1) positionLabel = '<div style="color:#2ecc71; font-weight:bold; margin-bottom:5px;">👁️ НАСТОЯЩЕЕ</div>';
+                    if (index === 2) positionLabel = '<div style="color:#e74c3c; font-weight:bold; margin-bottom:5px;">🔮 БУДУЩЕЕ</div>';
+                }
+
+                return `
+                    <div class="taro-card-wrapper">
+                        ${positionLabel}
+                        <div class="card-icon ${rotationClass}">🎴</div>
+                        <div style="font-size:1.3rem; font-weight:bold; color:#ffb347;">${escapeHtml(card.nameRu)}</div>
+                        <div style="font-size:0.8rem; color:#aaa; margin: 4px 0 10px 0;">
+                            ${card.arcana} ${card.suit ? '· ' + escapeHtml(card.suit) : ''} · №${card.number}
+                        </div>
+                        <div style="font-size:0.9rem; text-align:left; border-top:1px solid #444; padding-top:10px; line-height:1.4;">
+                            <strong>${positionTitle}:</strong> ${escapeHtml(card.interpretation)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            await loadHistory(true);
         } catch (err) {
-            cardDiv.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
+            if (err.status === 429) {
+                cardDiv.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
+                startCooldownTimer(drawBtn, 3);
+            } else {
+                cardDiv.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
+            }
         }
     }
 
+    function startCooldownTimer(button, seconds) {
+        button.disabled = true;
+        const originalText = button.textContent;
+        let timeLeft = seconds;
+
+        const interval = setInterval(() => {
+            button.textContent = `⏳ Подождите (${timeLeft}с)`;
+            timeLeft--;
+            if (timeLeft < 0) {
+                clearInterval(interval);
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }, 1000);
+    }
+
     async function login(username, password) {
-        await apiRequest('/auth/login', 'POST', { username, password });
-        await updateUserWidget();
-        await loadHistory(true);
+        try {
+            await apiRequest('/auth/login', 'POST', {username, password});
+            await updateUserWidget();
+            await loadHistory(true);
+        } catch (err) {
+            if (err.status === 429) {
+                startCooldownTimer(document.getElementById('loginBtn'), 60);
+            }
+            throw err;
+        }
     }
 
     async function register(username, password) {
-        await apiRequest('/auth/register', 'POST', { username, password });
+        await apiRequest('/auth/register', 'POST', {username, password});
         await updateUserWidget();
         await loadHistory(true);
     }
@@ -303,12 +490,12 @@
         }
         await updateUserWidget();
         await loadHistory(true);
-        document.getElementById('cardContent').innerHTML = 'Нажмите «Вытянуть карту»';
+        document.getElementById('cardContent').innerHTML = 'Нажмите «Вытянуть карты»';
     }
 
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
+        return str.replace(/[&<>]/g, function (m) {
             if (m === '&') return '&amp;';
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
@@ -329,14 +516,29 @@
     document.getElementById('loginBtn').onclick = async () => {
         const u = document.getElementById('loginUsername').value.trim();
         const p = document.getElementById('loginPassword').value.trim();
-        if (!u || !p) { showAuthError('Введите логин и пароль'); return; }
-        try { await login(u, p); } catch(e) { showAuthError(e.message); }
+        if (!u || !p) {
+            showAuthError('Введите логин и пароль');
+            return;
+        }
+        try {
+            await login(u, p);
+        } catch (e) {
+            showAuthError(e.message);
+        }
     };
+
     document.getElementById('registerBtn').onclick = async () => {
         const u = document.getElementById('regUsername').value.trim();
         const p = document.getElementById('regPassword').value.trim();
-        if (!u || !p) { showAuthError('Введите логин и пароль'); return; }
-        try { await register(u, p); } catch(e) { showAuthError(e.message); }
+        if (!u || !p) {
+            showAuthError('Введите логин и пароль');
+            return;
+        }
+        try {
+            await register(u, p);
+        } catch (e) {
+            showAuthError(e.message);
+        }
     };
 
     updateUserWidget();
