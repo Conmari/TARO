@@ -13,12 +13,13 @@ import scari.corp.taro.entity.TaroCards;
 import scari.corp.taro.entity.TaroHistory;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.enums.LayoutType;
+import scari.corp.taro.factory.TaroLayoutFactory;
 import scari.corp.taro.mapper.TaroMapper;
+import scari.corp.taro.processor.TaroLayoutProcessor;
 import scari.corp.taro.repository.TaroHistoryRepository;
 import scari.corp.taro.repository.UserRepository;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service
@@ -30,28 +31,37 @@ public class TaroService {
     private final TaroHistoryAsyncService taroHistoryAsyncService;
     private final UserRepository userRepository;
     private final TaroMapper taroMapper;
+    private final TaroLayoutFactory taroLayoutFactory;
 
     /**
      * Возвращает случайную карту из колоды в виде DTO.
      *
-     * @return {@link CardResponseDto} с данными карты
+     * @return список карт {@link CardResponseDto} с данными карт
      */
     @Transactional
-    public CardResponseDto getRandomCard(String username, String sessionId) {
+    public List<CardResponseDto> generateLayout(String username, String sessionId, LayoutType layoutType) {
         List<TaroCards> allCards = taroCacheService.getAllCards();
         if (allCards.isEmpty()) throw new IllegalStateException("Колода пуста");
 
-        int randomIndex = ThreadLocalRandom.current().nextInt(allCards.size());
-        TaroCards card = allCards.get(randomIndex);
+        TaroLayoutProcessor processor = taroLayoutFactory.getProcessor(layoutType);
+        List<TaroCards> selectedCards = processor.process(allCards);
 
         if (username != null) {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalStateException("Пользователь не найден: " + username));
-            taroHistoryAsyncService.saveHistoryForUserAsync(card.getId(), user.getId(), LayoutType.ONE_CARD);
+
+            for (TaroCards card : selectedCards) {
+                taroHistoryAsyncService.saveHistoryForUserAsync(card.getId(), user.getId(), layoutType);
+            }
         } else {
-            taroHistoryAsyncService.saveHistoryForSessionAsync(card.getId(), sessionId, LayoutType.ONE_CARD);
+            for (TaroCards card : selectedCards) {
+                taroHistoryAsyncService.saveHistoryForSessionAsync(card.getId(), sessionId, layoutType);
+            }
         }
-        return taroMapper.toCardResponseDto(card);
+
+        return selectedCards.stream()
+                .map(taroMapper::toCardResponseDto)
+                .toList();
     }
 
     /**
