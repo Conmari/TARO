@@ -10,8 +10,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class OneCardProcessor implements TaroLayoutProcessor {
 
     @Override
-    public List<TaroCards> process(List<TaroCards> deck) {
+    public List<SelectedCard> process(List<TaroCards> deck) {
         int randomIndex = ThreadLocalRandom.current().nextInt(deck.size());
-        return List.of(deck.get(randomIndex));
+
+        boolean isReversed = ThreadLocalRandom.current().nextBoolean();
+
+        return List.of(new SelectedCard(deck.get(randomIndex), isReversed));
     }
 }

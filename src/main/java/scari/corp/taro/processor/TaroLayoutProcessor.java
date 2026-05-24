@@ -11,8 +11,8 @@ public interface TaroLayoutProcessor {
     /**
      * Выполняет алгоритм расклада: выбирает нужное количество случайных карт из колоды.
      *
-     * @param deck полная колода карт
+     * @param deck полная колода карт из кэша
      * @return список выбранных карт для расклада
      */
-    List<TaroCards> process(List<TaroCards> deck);
+    List<SelectedCard> process(List<TaroCards> deck);
 }
