@@ -74,7 +74,6 @@ public class TaroService {
 
         TaroLayout savedLayout = taroLayoutRepository.save(layoutBuilder.build());
 
-        taroHistoryAsyncService.saveLayoutCardsAsync(savedLayout.getId(), selectedCards);
         org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
                 new org.springframework.transaction.support.TransactionSynchronization() {
                     @Override
