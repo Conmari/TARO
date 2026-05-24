@@ -75,6 +75,14 @@ public class TaroService {
         TaroLayout savedLayout = taroLayoutRepository.save(layoutBuilder.build());
 
         taroHistoryAsyncService.saveLayoutCardsAsync(savedLayout.getId(), selectedCards);
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        taroHistoryAsyncService.saveLayoutCardsAsync(savedLayout.getId(), selectedCards);
+                    }
+                }
+        );
 
         return selectedCards.stream()
                 .map(item -> taroMapper.toCardResponseDto(item.card(), item.isReversed()))
