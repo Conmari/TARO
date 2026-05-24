@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.exception.UserAlreadyExistsException;
-import scari.corp.taro.repository.TaroHistoryRepository;
+import scari.corp.taro.repository.TaroLayoutRepository;
 import scari.corp.taro.repository.UserRepository;
 
 import java.util.NoSuchElementException;
@@ -17,7 +17,7 @@ import java.util.NoSuchElementException;
 @Slf4j
 public class AuthService {
     private final UserRepository userRepository;
-    private final TaroHistoryRepository historyRepository;
+    private final TaroLayoutRepository layoutRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -34,7 +34,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(password));
         User savedUser = userRepository.save(user);
 
-        historyRepository.linkSessionToUser(savedUser, sessionId);
+        layoutRepository.linkSessionToUser(savedUser, sessionId);
         log.info("Пользователь зарегистрирован в БД: {}", username);
 
         return savedUser;
@@ -48,7 +48,7 @@ public class AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Пользователь не найден: " + username));
 
-        historyRepository.linkSessionToUser(user, sessionId);
+        layoutRepository.linkSessionToUser(user, sessionId);
         log.info("История сессии {} успешно привязана к пользователю: {}", sessionId, username);
     }
 }
