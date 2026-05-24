@@ -28,14 +28,15 @@ public class TaroHistoryAsyncService {
      */
     @Async
     @Transactional
-    public void saveHistoryForUserAsync(Long cardId, Long userId) {
+    public void saveHistoryForUserAsync(Long cardId, Long userId, LayoutType layoutType) {
         TaroCards cardProxy = entityManager.getReference(TaroCards.class, cardId);
         User userProxy = entityManager.getReference(User.class, userId);
 
-        TaroHistory history = new TaroHistory();
-        history.setLayoutType(LayoutType.ONE_CARD);
-        history.setCard(cardProxy);
-        history.setUser(userProxy);
+        TaroHistory history = TaroHistory.builder()
+                .layoutType(layoutType)
+                .card(cardProxy)
+                .user(userProxy)
+                .build();
 
         taroHistoryRepository.save(history);
     }
@@ -45,13 +46,14 @@ public class TaroHistoryAsyncService {
      */
     @Async
     @Transactional
-    public void saveHistoryForSessionAsync(Long cardId, String sessionId) {
+    public void saveHistoryForSessionAsync(Long cardId, String sessionId, LayoutType layoutType) {
         TaroCards cardProxy = entityManager.getReference(TaroCards.class, cardId);
 
-        TaroHistory history = new TaroHistory();
-        history.setLayoutType(LayoutType.ONE_CARD);
-        history.setCard(cardProxy);
-        history.setSessionId(sessionId);
+        TaroHistory history = TaroHistory.builder()
+                .layoutType(layoutType)
+                .card(cardProxy)
+                .sessionId(sessionId)
+                .build();
 
         taroHistoryRepository.save(history);
     }
