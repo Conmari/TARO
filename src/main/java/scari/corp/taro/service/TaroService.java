@@ -27,6 +27,7 @@ public class TaroService {
 
     private final TaroCacheService taroCacheService;
     private final TaroHistoryRepository taroHistoryRepository;
+    private final TaroHistoryAsyncService taroHistoryAsyncService;
     private final UserRepository userRepository;
     private final TaroMapper taroMapper;
 
@@ -46,27 +47,11 @@ public class TaroService {
         if (username != null) {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalStateException("Пользователь не найден: " + username));
-            saveHistoryForUser(card, user);
+            taroHistoryAsyncService.saveHistoryForUserAsync(card.getId(), user.getId(), LayoutType.ONE_CARD);
         } else {
-            saveHistoryForSession(card, sessionId);
+            taroHistoryAsyncService.saveHistoryForSessionAsync(card.getId(), sessionId, LayoutType.ONE_CARD);
         }
         return taroMapper.toCardResponseDto(card);
-    }
-
-    private void saveHistoryForUser(TaroCards card, User user) {
-        TaroHistory reading = new TaroHistory();
-        reading.setLayoutType(LayoutType.ONE_CARD);
-        reading.setCard(card);
-        reading.setUser(user);
-        taroHistoryRepository.save(reading);
-    }
-
-    private void saveHistoryForSession(TaroCards card, String sessionId) {
-        TaroHistory history = new TaroHistory();
-        history.setLayoutType(LayoutType.ONE_CARD);
-        history.setCard(card);
-        history.setSessionId(sessionId);
-        taroHistoryRepository.save(history);
     }
 
     /**

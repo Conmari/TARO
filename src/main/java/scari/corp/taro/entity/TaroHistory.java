@@ -2,6 +2,7 @@ package scari.corp.taro.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_history_session_date", columnList = "session_id, created_at DESC")
 })
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaroHistory {
