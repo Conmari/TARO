@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 import scari.corp.taro.dto.auth.ApiResponse;
 import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
+import scari.corp.taro.enums.LayoutType;
 import scari.corp.taro.service.RateLimitingService;
 import scari.corp.taro.service.TaroService;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/taro")
@@ -34,10 +36,14 @@ public class TaroController {
      * @param principal объект авторизованного пользователя (может быть null для гостей)
      * @param req       HTTP-запрос для извлечения идентификатора сессии гостя
      * @return {@link ResponseEntity} со статусом 200 и объектом {@link CardResponseDto} при успехе,
-     *         либо со статусом 429 и объектом {@link ApiResponse} при превышении лимита
+     * либо со статусом 429 и объектом {@link ApiResponse} при превышении лимита
      */
     @GetMapping("/random")
-    public ResponseEntity<?> randomCard(Principal principal, HttpServletRequest req) {
+    public ResponseEntity<?> randomCard(
+            @RequestParam(defaultValue = "ONE_CARD") LayoutType layoutType,
+            Principal principal,
+            HttpServletRequest req) {
+
         String username = (principal != null) ? principal.getName() : null;
         String sessionId = req.getSession().getId();
         String limitKey = (username != null) ? username : sessionId;
@@ -48,8 +54,8 @@ public class TaroController {
                     .body(new ApiResponse("Вы совершаете запросы слишком часто. Пожалуйста, подождите 3 секунды."));
         }
 
-        CardResponseDto card = taroService.getRandomCard(username, sessionId);
-        return ResponseEntity.ok(card);
+        List<CardResponseDto> cards = taroService.generateLayout(username, sessionId, layoutType);
+        return ResponseEntity.ok(cards);
     }
 
     @GetMapping("/history")

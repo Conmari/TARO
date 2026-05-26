@@ -5,16 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import scari.corp.taro.enums.LayoutType;
-
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "taro_history", indexes = {
-        @Index(name = "idx_history_user_date", columnList = "user_id, created_at DESC"),
-        @Index(name = "idx_history_session_date", columnList = "session_id, created_at DESC")
-})
+@Table(name = "taro_history")
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,22 +18,17 @@ public class TaroHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private LayoutType layoutType;
-
-    @ManyToOne
-    @JoinColumn(name = "card_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "card_id", nullable = false)
     private TaroCards card;
 
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "is_reversed", nullable = false, columnDefinition = "boolean default false")
+    private boolean isReversed;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "card_order", nullable = false, columnDefinition = "integer default 0")
+    private int cardOrder;
 
-    @Column(name = "session_id")
-    private String sessionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "layout_id", nullable = false)
+    private TaroLayout layout;
 }
