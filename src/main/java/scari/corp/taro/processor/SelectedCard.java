@@ -12,5 +12,4 @@ import scari.corp.taro.entity.TaroCards;
  * @param isReversed флаг положения карты: {@code true} — перевёрнутое значение,
  *                   {@code false} — прямое значение
  */
-public record SelectedCard(TaroCards card, boolean isReversed) {
-}
+public record SelectedCard(TaroCards card, boolean isReversed) {}
