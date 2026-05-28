@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+import scari.corp.taro.annotation.AuthRateLimit;
 import scari.corp.taro.dto.auth.ApiResponse;
 import scari.corp.taro.dto.auth.LoginRequest;
 import scari.corp.taro.dto.auth.RegisterRequest;
@@ -73,20 +74,13 @@ public class AuthController {
      * @param req     HTTP-запрос для определения IP-адреса и управления сессией
      * @return {@link ResponseEntity} со статусом 200 при успехе, либо 429 при превышении лимитов входа
      */
+    @AuthRateLimit
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
                                    HttpServletRequest req) {
         log.debug("Попытка входа: {}", request.username());
         String username = request.username();
         String sessionId = req.getSession().getId();
-        String ipAddress = getClientIp(req);
-
-        // Защита по IP-адресу (максимум 5 попыток в минуту с одного ПК)
-        if (!rateLimitingService.tryConsumeAuth("IP:" + ipAddress)) {
-            return ResponseEntity
-                    .status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(new ApiResponse("Слишком много попыток входа с вашего компьютера. Пожалуйста, подождите минуту."));
-        }
 
         // Защита по имени пользователя (максимум 5 попыток в минуту для одного аккаунта)
         if (!rateLimitingService.tryConsumeAuth("USER:" + username)) {
@@ -159,23 +153,5 @@ public class AuthController {
         );
     }
 
-    /**
-     * Извлекает реальный IP-адрес клиента с учетом проксирования через Nginx.
-     * <p>
-     * Анализирует HTTP-заголовок 'X-Forwarded-For'. Если запрос прошел цепочку прокси,
-     * извлекает самый первый (оригинальный) IP-адрес. Если заголовок отсутствует,
-     * возвращает стандартный удаленный адрес хоста.
-     *
-     * @param request текущий HTTP-запрос
-     * @return строковое представление IP-адреса клиента
-     */
-    private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
 
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-
-        return request.getRemoteAddr();
-    }
 }
