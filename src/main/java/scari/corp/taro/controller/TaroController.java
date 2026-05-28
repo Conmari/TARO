@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import scari.corp.taro.annotation.TaroRateLimit;
 import scari.corp.taro.dto.auth.ApiResponse;
 import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
@@ -25,7 +26,6 @@ import java.util.List;
 public class TaroController {
 
     private final TaroService taroService;
-    private final RateLimitingService rateLimitingService;
 
     /**
      * Возвращает случайную карту Таро с проверкой лимита частоты запросов.
@@ -38,6 +38,7 @@ public class TaroController {
      * @return {@link ResponseEntity} со статусом 200 и объектом {@link CardResponseDto} при успехе,
      * либо со статусом 429 и объектом {@link ApiResponse} при превышении лимита
      */
+    @TaroRateLimit
     @GetMapping("/random")
     public ResponseEntity<?> randomCard(
             @RequestParam(defaultValue = "ONE_CARD") LayoutType layoutType,
@@ -46,13 +47,6 @@ public class TaroController {
 
         String username = (principal != null) ? principal.getName() : null;
         String sessionId = req.getSession().getId();
-        String limitKey = (username != null) ? username : sessionId;
-
-        if (!rateLimitingService.tryConsume(limitKey)) {
-            return ResponseEntity
-                    .status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(new ApiResponse("Вы совершаете запросы слишком часто. Пожалуйста, подождите 3 секунды."));
-        }
 
         List<CardResponseDto> cards = taroService.generateLayout(username, sessionId, layoutType);
         return ResponseEntity.ok(cards);
