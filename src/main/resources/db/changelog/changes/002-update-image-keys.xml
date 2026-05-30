@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="2" author="dmitry" runOnChange="true">
+        <comment>Безопасное обновление image_key для всех 78 карт из CSV файла</comment>
+
+        <createTable tableName="tmp_cards_images">
+            <column name="number" type="NUMERIC"/>
+            <column name="arcana" type="VARCHAR(50)"/>
+            <column name="suit" type="VARCHAR(50)"/>
+            <column name="image_key" type="VARCHAR(255)"/>
+        </createTable>
+
+        <loadData tableName="tmp_cards_images" file="db/changelog/cards_data.csv">
+            <column name="number" type="NUMERIC"/>
+            <column name="arcana" type="STRING"/>
+            <column name="suit" type="STRING"/>
+            <column name="image_key" type="STRING"/>
+        </loadData>
+
+        <sql>
+            UPDATE public.taro_cards t
+            SET image_key = tmp.image_key FROM tmp_cards_images tmp
+            WHERE t.number = tmp.number
+              AND t.arcana = tmp.arcana
+              AND (
+                LOWER (t.suit) = LOWER (tmp.suit)
+               OR (t.suit IS NULL
+              AND tmp.suit IS NULL)
+               OR (t.suit = ''
+              AND tmp.suit IS NULL)
+               OR (t.suit IS NULL
+              AND tmp.suit = '')
+                );
+        </sql>
+
+        <dropTable tableName="tmp_cards_images"/>
+    </changeSet>
+</databaseChangeLog>
