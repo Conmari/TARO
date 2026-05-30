@@ -21,5 +21,6 @@ public record CardResponseDto(
         String suit,
         Integer number,
         boolean isReversed,
-        String interpretation
+        String interpretation,
+        String imageKey
 ) {}
