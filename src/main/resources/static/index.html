@@ -229,7 +229,19 @@
     <!-- Результат гадания -->
     <div class="card">
         <h3>🎴 Ваш расклад</h3>
-        <div id="cardContent" class="layout-grid">Нажмите «Вытянуть карты»</div>
+        <div id="cardContent" class="layout-grid">
+            <!-- Начальное состояние стола с рубашкой карты -->
+            <div class="taro-card-wrapper" style="opacity: 0.7;">
+                <div style="margin: 15px 0; overflow: hidden; border-radius: 12px;">
+                    <img src="/images/taro-cards/card-back.png"
+                         alt="Рубашка карт Таро"
+                         style="width: 100%; max-width: 150px; height: auto; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.6);">
+                </div>
+                <div style="font-size:1.1rem; color:#aaa; margin-top: 10px;">Нажмите «Вытянуть карты», чтобы открыть
+                    завесу тайны...
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- История гаданий (с пагинацией) -->
@@ -419,8 +431,16 @@
                 return `
                     <div class="taro-card-wrapper">
                         ${positionLabel}
-                        <div class="card-icon ${rotationClass}">🎴</div>
-                        <div style="font-size:1.3rem; font-weight:bold; color:#ffb347;">${escapeHtml(card.nameRu)}</div>
+
+                        <!-- Блок с динамической картинкой из базы данных -->
+                        <div style="margin: 15px 0; overflow: hidden; border-radius: 12px;">
+                            <img src="/images/taro-cards/${card.imageKey}"
+                                 alt="${escapeHtml(card.nameRu)}"
+                                 class="${rotationClass}"
+                                 style="width: 100%; max-width: 130px; height: auto; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.6); transition: transform 0.5s ease;">
+                        </div>
+
+                        <div style="font-size:1.3rem; font-weight:bold; color:#ffb347; margin-top: 10px;">${escapeHtml(card.nameRu)}</div>
                         <div style="font-size:0.8rem; color:#aaa; margin: 4px 0 10px 0;">
                             ${card.arcana} ${card.suit ? '· ' + escapeHtml(card.suit) : ''} · №${card.number}
                         </div>
