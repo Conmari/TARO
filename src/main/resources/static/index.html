@@ -451,7 +451,9 @@
                 `;
             }).join('');
 
-            await loadHistory(true);
+            setTimeout(async () => {
+                await loadHistory(true);
+            }, 350);
         } catch (err) {
             if (err.status === 429) {
                 cardDiv.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
