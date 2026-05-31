@@ -6,7 +6,7 @@
     <changeSet id="1" author="dmitry">
         <comment>Добавление колонки image_key в таблицу taro_cards</comment>
         <addColumn tableName="taro_cards">
-            <column name="image_key" type="varchar(255)" defaultValue="default_card.png">
+            <column name="image_key" type="varchar(255)" defaultValue="default_card.webp">
                 <constraints nullable="false"/>
             </column>
         </addColumn>
