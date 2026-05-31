@@ -1,5 +1,5 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/changes/001-add-image-key.xml
+      file: db/changelog/changes/000-initial-schema.xml
   - include:
-      file: db/changelog/changes/002-update-image-keys.xml
+      file: db/changelog/changes/001-add-image-key-and-autogenerate.xml
