@@ -38,7 +38,8 @@ public interface TaroMapper {
                 card.getSuit(),
                 card.getNumber(),
                 isReversed,
-                text
+                text,
+                card.getImageKey()
         );
     }
 }

@@ -34,4 +34,6 @@ public class TaroCards {
     @Embedded
     private Meanings meanings;
 
+    @Column(name = "image_key", nullable = false)
+    private String imageKey;
 }

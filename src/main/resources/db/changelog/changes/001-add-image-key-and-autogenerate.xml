@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1" author="dmitry">
+        <!-- Выполняем только если колонки image_key еще нет в базе -->
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="taro_cards" columnName="image_key"/></not>
+        </preConditions>
+        <comment>Безопасное добавление и автогенерация image_key для старой и новой базы</comment>
+
+        <!-- 1. Создаем колонку в таблице -->
+        <addColumn tableName="taro_cards">
+            <column name="image_key" type="varchar(255)"/>
+        </addColumn>
+
+        <!-- 2. Автоматически генерируем имена картинок-->
+        <sql>
+            -- Старшие Арканы (The Fool -> the-fool.webp, Wheel of Fortune -> wheel-of-fortune.webp)
+            UPDATE public.taro_cards
+            SET image_key = LOWER(REPLACE(name_en, ' ', '-')) || '.webp'
+            WHERE arcana = 'MAJOR';
+
+            -- Младшие Арканы 1-10 с ведущим нулем (swords-01.webp, swords-10.webp)
+            UPDATE public.taro_cards
+            SET image_key = LOWER(suit) || '-' || LPAD(number::text, 2, '0') || '.webp'
+            WHERE arcana = 'MINOR' AND number BETWEEN 1 AND 10;
+
+            -- Придворные карты Младших Арканов (page, knight, queen, king)
+            UPDATE public.taro_cards SET image_key = LOWER(suit) || '-page.webp' WHERE arcana = 'MINOR' AND number = 11;
+            UPDATE public.taro_cards SET image_key = LOWER(suit) || '-knight.webp' WHERE arcana = 'MINOR' AND number = 12;
+            UPDATE public.taro_cards SET image_key = LOWER(suit) || '-queen.webp' WHERE arcana = 'MINOR' AND number = 13;
+            UPDATE public.taro_cards SET image_key = LOWER(suit) || '-king.webp' WHERE arcana = 'MINOR' AND number = 14;
+        </sql>
+
+        <!-- 3. Включаем NOT NULL ограничение, когда все строки успешно обновились -->
+        <addNotNullConstraint tableName="taro_cards" columnName="image_key" columnDataType="varchar(255)"/>
+    </changeSet>
+
+</databaseChangeLog>
