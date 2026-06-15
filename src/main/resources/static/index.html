@@ -221,6 +221,7 @@
         <select id="layoutTypeSelect">
             <option value="ONE_CARD">🔮 1 Карта (Карта дня)</option>
             <option value="THREE_CARDS">🔮 3 Карты (Прошлое / Настоящее / Будущее)</option>
+            <option value="CELTIC_CROSS">🔮 10 карт — глубокий разбор (Кельтский крест)</option>
         </select>
         <button id="drawCardBtn" style="font-size: 1.2rem;">✨ Вытянуть карты ✨</button>
         <button id="refreshHistoryBtn" class="refresh-btn">🔄 Обновить историю</button>
@@ -356,12 +357,28 @@
                 const positionText = card.isReversed ? '🌙 Перевёрнутое' : '☀️ Прямое';
                 const badgeClass = card.isReversed ? 'badge-reversed' : 'badge-upright';
 
+                const celticPositions = [
+                    "1. Суть ситуации (что происходит сейчас)",
+                    "2. Влияние или препятствие (что мешает или помогает)",
+                    "3. Подсознание (основа, корни проблемы)",
+                    "4. Прошлое (что привело к текущей ситуации)",
+                    "5. Сознание (цели, мысли, видимая вершина)",
+                    "6. Ближайшее будущее (что произойдет скоро)",
+                    "7. Отношение к себе (страхи, надежды, ваша позиция)",
+                    "8. Окружение (влияние друзей, семьи, внешних факторов)",
+                    "9. Надежды и опасения (чего человек ждет или боится)",
+                    "10. Итог (конечный результат развития ситуации)"
+                ];
+
                 // Добавляем текстовые маркеры для позиций тройного расклада
                 let positionLabel = '';
                 if (layout.layoutType === 'THREE_CARDS') {
                     if (index === 0) positionLabel = '<span style="color:#3498db; font-weight:bold;">🕒 ПРОШЛОЕ: </span>';
                     if (index === 1) positionLabel = '<span style="color:#2ecc71; font-weight:bold;">👁️ НАСТОЯЩЕЕ: </span>';
                     if (index === 2) positionLabel = '<span style="color:#e74c3c; font-weight:bold;">🔮 БУДУЩЕЕ: </span>';
+                } else if (layout.layoutType === 'CELTIC_CROSS') {
+                    // Подпись для карты в истории
+                    positionLabel = `<span style="color:#9b59b6; font-weight:bold;">${celticPositions[index]}: </span>`;
                 }
 
                 return `
@@ -421,11 +438,27 @@
                 const rotationClass = card.isReversed ? 'reversed-card' : '';
                 const positionTitle = card.isReversed ? '🌙 Перевёрнутая' : '☀️ Прямая';
 
+                const celticPositions = [
+                    "1. Суть ситуации (что происходит сейчас)",
+                    "2. Влияние или препятствие (что мешает или помогает)",
+                    "3. Подсознание (основа, корни проблемы)",
+                    "4. Прошлое (что привело к текущей ситуации)",
+                    "5. Сознание (цели, мысли, видимая вершина)",
+                    "6. Ближайшее будущее (что произойдет скоро)",
+                    "7. Отношение к себе (страхи, надежды, ваша позиция)",
+                    "8. Окружение (влияние друзей, семьи, внешних факторов)",
+                    "9. Надежды и опасения (чего человек ждет или боится)",
+                    "10. Итог (конечный результат развития ситуации)"
+                ];
+
                 let positionLabel = '';
                 if (layoutType === 'THREE_CARDS') {
                     if (index === 0) positionLabel = '<div style="color:#3498db; font-weight:bold; margin-bottom:5px;">🕒 ПРОШЛОЕ</div>';
                     if (index === 1) positionLabel = '<div style="color:#2ecc71; font-weight:bold; margin-bottom:5px;">👁️ НАСТОЯЩЕЕ</div>';
                     if (index === 2) positionLabel = '<div style="color:#e74c3c; font-weight:bold; margin-bottom:5px;">🔮 БУДУЩЕЕ</div>';
+                } else if (layoutType === 'CELTIC_CROSS') {
+                    // Автоматически берем текст из массива по индексу карты (от 0 до 9)
+                    positionLabel = `<div style="color:#9b59b6; font-weight:bold; margin-bottom:5px;">${celticPositions[index]}</div>`;
                 }
 
                 return `
