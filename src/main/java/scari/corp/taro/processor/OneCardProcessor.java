@@ -2,26 +2,26 @@ package scari.corp.taro.processor;
 
 import org.springframework.stereotype.Component;
 import scari.corp.taro.entity.TaroCards;
+import scari.corp.taro.enums.LayoutType;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Процессор для вытягивания одной случайной карты Таро.
+ * Процессор для генерации расклада "Карта дня".
  * <p>
- * Реализует стратегию "Карта дня". Алгоритм оптимизирован по скорости и памяти:
- * вместо перемешивания всей колоды он вычисляет один случайный индекс за время O(1)
- * и подкидывает виртуальную монетку для определения пространственного положения карты.
+ * Реализует извлечение ровно одной карты напрямую через интерфейс {@link TaroLayoutProcessor}.
+ * Алгоритм оптимизирован по скорости и памяти: вместо полного перемешивания колоды
+ * он вычисляет один случайный индекс за время O(1) и определяет её пространственное положение.
  */
-@Component("ONE_CARD")
+@Component
 public class OneCardProcessor implements TaroLayoutProcessor {
 
-    /**
-     * Извлекает одну случайную карту из переданной колоды.
-     *
-     * @param deck полная колода карт из кэш-слоя приложения
-     * @return список, содержащий ровно один иммутабельный контейнер {@link SelectedCard}
-     */
+    @Override
+    public LayoutType getSupportedType() {
+        return LayoutType.ONE_CARD;
+    }
+
     @Override
     public List<SelectedCard> process(List<TaroCards> deck) {
         int randomIndex = ThreadLocalRandom.current().nextInt(deck.size());

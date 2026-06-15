@@ -1,38 +1,52 @@
 package scari.corp.taro.factory;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import scari.corp.taro.enums.LayoutType;
 import scari.corp.taro.processor.TaroLayoutProcessor;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Фабрика компонентов для динамического управления процессорами раскладов Таро.
  * <p>
- * Реализует интерфейс {@link TaroLayoutProcessor}
- * и собирает их в карту {@code Map<String, TaroLayoutProcessor>}.
+ * Обеспечивает централизованный доступ к стратегиям генерации раскладов.
+ * При старте приложения автоматически собирает все доступные реализации
+ * {@link TaroLayoutProcessor} в индексированную карту.
  */
 @Component
-@RequiredArgsConstructor
 public class TaroLayoutFactory {
 
     /**
-     * Карта зарегистрированных Спрингом процессоров раскладов.
-     * Ключ — строковое представление {@link LayoutType},
-     * значение — соответствующий класс-обработчик алгоритма перемешивания.
+     * Карта зарегистрированных процессоров раскладов.
+     * Ключ — тип расклада {@link LayoutType},
+     * значение — соответствующий класс-обработчик алгоритма.
      */
-    private final Map<String, TaroLayoutProcessor> processors;
+    private final Map<LayoutType, TaroLayoutProcessor> processors;
 
     /**
-     * Возвращает конкретную стратегию (процессор) генерации карт в зависимости от выбранного типа расклада.
+     * Конструктор фабрики для автоматического сбора процессоров Спрингом.
+     *
+     * @param processorList список всех обнаруженных в контексте бинов {@link TaroLayoutProcessor}
+     */
+    public TaroLayoutFactory(List<TaroLayoutProcessor> processorList) {
+        this.processors = processorList.stream()
+                .collect(Collectors.toMap(
+                        TaroLayoutProcessor::getSupportedType,
+                        processor -> processor
+                ));
+    }
+
+    /**
+     * Возвращает конкретную стратегию (процессор) в зависимости от выбранного типа расклада.
      *
      * @param type перечисление {@link LayoutType}, определяющее вид гадания (например, ONE_CARD, THREE_CARDS)
-     * @return объект {@link TaroLayoutProcessor}, содержащий математический алгоритм выбора карт из колоды
-     * @throws IllegalArgumentException если для переданного типа расклада не найдено зарегистрированного бина-процессора
+     * @return объект {@link TaroLayoutProcessor}, содержащий алгоритм выбора карт из колоды
+     * @throws IllegalArgumentException если для переданного типа расклада не найдено зарегистрированного процессора
      */
     public TaroLayoutProcessor getProcessor(LayoutType type) {
-        TaroLayoutProcessor processor = processors.get(type.name());
+        TaroLayoutProcessor processor = processors.get(type);
         if (processor == null) {
             throw new IllegalArgumentException("Алгоритм для расклада " + type + " не найден");
         }
