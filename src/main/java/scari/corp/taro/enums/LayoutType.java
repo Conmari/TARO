@@ -5,5 +5,6 @@ package scari.corp.taro.enums;
  */
 public enum LayoutType {
     ONE_CARD,
-    THREE_CARDS
+    THREE_CARDS,
+    CELTIC_CROSS
 }

@@ -1,40 +1,25 @@
 package scari.corp.taro.processor;
 
 import org.springframework.stereotype.Component;
-import scari.corp.taro.entity.TaroCards;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import scari.corp.taro.enums.LayoutType;
 
 /**
- * Процессор для генерации гадания на три карты.
+ * Процессор для генерации расклада на три карты Таро.
  * <p>
- * Реализует стратегию "Прошлое, Настоящее, Будущее".
- * Чтобы исключить дублирование карт в рамках одного сеанса, алгоритм создает
- * изолированную копию колоды, полностью перемешивает её и забирает первые три карты.
+ * Реализует классическую стратегию триады "Прошлое, Настоящее, Будущее".
+ * Опирается на базовый алгоритм перемешивания {@link AbstractLayoutProcessor},
+ * передавая в него фиксированное количество карт для извлечения.
  */
-@Component("THREE_CARDS")
-public class ThreeCardsProcessor implements TaroLayoutProcessor {
+@Component
+public class ThreeCardsProcessor extends AbstractLayoutProcessor {
 
-    /**
-     * Вытягивает три уникальные случайные карты из колоды.
-     *
-     * @param deck полная колода карт из кэш-слоя приложения
-     * @return упорядоченный список из трех контейнеров {@link SelectedCard}
-     */
     @Override
-    public List<SelectedCard> process(List<TaroCards> deck) {
-        List<TaroCards> shuffledDeck = new ArrayList<>(deck);
+    public LayoutType getSupportedType() {
+        return LayoutType.THREE_CARDS;
+    }
 
-        Collections.shuffle(shuffledDeck);
-
-        List<SelectedCard> result = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            boolean isReversed = ThreadLocalRandom.current().nextBoolean();
-            result.add(new SelectedCard(shuffledDeck.get(i), isReversed));
-        }
-        return result;
+    @Override
+    protected int getCardsCount() {
+        return 3;
     }
 }
