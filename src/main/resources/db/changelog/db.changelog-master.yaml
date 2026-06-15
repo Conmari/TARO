@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/000-initial-schema.xml
   - include:
       file: db/changelog/changes/001-add-image-key-and-autogenerate.xml
+  - include:
+      file: db/changelog/changes/002-drop-layout-type-constraint.xml
