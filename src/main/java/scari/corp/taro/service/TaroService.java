@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import scari.corp.taro.dto.taro.CardResponseDto;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
 import scari.corp.taro.entity.TaroCards;
@@ -55,6 +56,11 @@ public class TaroService {
      */
     @Transactional
     public List<CardResponseDto> generateLayout(String username, String sessionId, LayoutType layoutType) {
+        log.info("[Главный поток] Старт генерации расклада: {}", layoutType);
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        // 1. Получаем колоду из кэша
         List<TaroCards> allCards = taroCacheService.getAllCards();
         if (allCards.isEmpty()) throw new IllegalStateException("Колода пуста");
 
@@ -83,6 +89,11 @@ public class TaroService {
                 }
         );
 
+        stopWatch.stop();
+        log.info("[Главный поток] Расклад ID: {} ({}) оформлен за {} мс",
+                savedLayout.getId(), layoutType, stopWatch.getTotalTimeMillis());
+
+        // 5. Мапим карты «на лету» из кэша для мгновенного ответа клиенту
         return selectedCards.stream()
                 .map(item -> taroMapper.toCardResponseDto(item.card(), item.isReversed()))
                 .toList();

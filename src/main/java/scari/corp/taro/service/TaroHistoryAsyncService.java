@@ -45,10 +45,17 @@ public class TaroHistoryAsyncService {
     @Async
     @Transactional
     public void saveLayoutCardsAsync(Long layoutId, List<SelectedCard> selectedCards) {
+        log.info("[Фоновый поток: {}] Начало записи карт для расклада ID: {}",
+                Thread.currentThread().getName(), layoutId);
+
+        // Получаем легковесный прокси-объект родительского расклада по ID (без SELECT запроса)
         TaroLayout layoutProxy = entityManager.getReference(TaroLayout.class, layoutId);
 
+        // Идем по списку карт и сохраняем их через паттерн Строитель (Builder)
         for (int i = 0; i < selectedCards.size(); i++) {
             SelectedCard item = selectedCards.get(i);
+
+            // Получаем прокси-объект самой карты Таро по ID (без SELECT запроса)
             TaroCards cardProxy = entityManager.getReference(TaroCards.class, item.card().getId());
 
             TaroHistory history = TaroHistory.builder()
@@ -60,5 +67,8 @@ public class TaroHistoryAsyncService {
 
             taroHistoryRepository.save(history);
         }
+
+        log.info("[Фоновый поток: {}] Успешно сохранено карт: {} для расклада ID: {}",
+                Thread.currentThread().getName(), selectedCards.size(), layoutId);
     }
 }

@@ -18,6 +18,7 @@ import scari.corp.taro.annotation.AuthRateLimit;
 import scari.corp.taro.dto.auth.ApiResponse;
 import scari.corp.taro.dto.auth.LoginRequest;
 import scari.corp.taro.dto.auth.RegisterRequest;
+import scari.corp.taro.entity.User;
 import scari.corp.taro.service.AuthService;
 import scari.corp.taro.service.RateLimitingService;
 
@@ -56,8 +57,10 @@ public class AuthController {
         log.debug("Попытка регистрации нового пользователя: {}", request.username());
         String sessionId = req.getSession().getId();
 
-        authService.register(request.username(), request.password(), sessionId);
+        // Сервис регистрирует и привязывает историю по чистым строкам
+        User user = authService.register(request.username(), request.password(), sessionId);
 
+        // Контроллер сам аутентифицирует пользователя в веб-контексте
         authenticateAndStoreSession(request.username(), request.password(), req);
 
         return ResponseEntity.ok(new ApiResponse("Регистрация успешна"));
