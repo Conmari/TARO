@@ -4,7 +4,15 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="2" author="dmitry">
-        <comment>Удаление ограничения check constraint для layout_type через SQL</comment>
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(1)
+                FROM information_schema.constraint_column_usage
+                WHERE table_name = 'taro_layouts'
+                  AND constraint_name = 'taro_layouts_layout_type_check'
+            </sqlCheck>
+        </preConditions>
+        <comment>Удаление ограничения check constraint для layout_type через preConditions</comment>
         <sql>
             ALTER TABLE taro_layouts DROP CONSTRAINT taro_layouts_layout_type_check;
         </sql>
