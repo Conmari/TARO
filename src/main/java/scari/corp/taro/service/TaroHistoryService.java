@@ -3,8 +3,6 @@ package scari.corp.taro.service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import scari.corp.taro.entity.TaroCards;
@@ -16,15 +14,15 @@ import scari.corp.taro.repository.TaroHistoryRepository;
 import java.util.List;
 
 /**
- * Асинхронный сервис для выполнения инфраструктурных задач по сохранению истории карт.
+ * Инфраструктурный сервис для сохранения истории выпавших карт в базу данных.
  * <p>
- * Изолирует тяжелые операции записи в базу данных от основного потока веб-сервера,
- * обеспечивая мгновенный ответ пользователю при генерации раскладов.
+ * Выделяет логику работы с таблицей истории в изолированный компонент. Делегирует
+ * управление потоками вызывающей стороне, что позволяет использовать его как
+ * синхронно, так и внутри асинхронных слушателей событий (Event Listeners).
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
-public class TaroHistoryAsyncService {
+public class TaroHistoryService {
 
     private final TaroHistoryRepository taroHistoryRepository;
 
@@ -32,19 +30,18 @@ public class TaroHistoryAsyncService {
     private final EntityManager entityManager;
 
     /**
-     * Асинхронно сохраняет состав карт для конкретного сеанса гадания в фоновом потоке.
+     * Выполняет пакетную запись вытянутых карт для конкретного расклада.
      * <p>
-     * Метод оптимизирован для минимизации нагрузки на СУБД: вместо выполнения тяжелых
-     * запросов {@code SELECT} для проверки связей, он использует легковесные прокси-объекты
-     * через {@link EntityManager#getReference(Class, Object)}.
+     * Алгоритм оптимизирован для минимизации нагрузки на БД: вместо выполнения тяжелых
+     * запросов {@code SELECT} для проверки ассоциаций, он использует легковесные JPA-прокси
+     * через {@link EntityManager#getReference}.
      * Порядковый номер карты автоматически фиксируется на основе её индекса в списке.
      *
-     * @param layoutId      уникальный идентификатор уже созданного родительского расклада
-     * @param selectedCards список структур {@link SelectedCard} с вытянутыми картами и их положениями
+     * @param layoutId      идентификатор созданного родительского расклада
+     * @param selectedCards список контейнеров {@link SelectedCard} с картами и их положениями
      */
-    @Async
     @Transactional
-    public void saveLayoutCardsAsync(Long layoutId, List<SelectedCard> selectedCards) {
+    public void saveLayoutCards(Long layoutId, List<SelectedCard> selectedCards) {
         TaroLayout layoutProxy = entityManager.getReference(TaroLayout.class, layoutId);
 
         for (int i = 0; i < selectedCards.size(); i++) {
