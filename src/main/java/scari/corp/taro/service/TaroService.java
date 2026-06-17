@@ -1,7 +1,7 @@
 package scari.corp.taro.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +13,7 @@ import scari.corp.taro.entity.TaroCards;
 import scari.corp.taro.entity.TaroLayout;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.enums.LayoutType;
+import scari.corp.taro.event.TaroLayoutCreatedEvent;
 import scari.corp.taro.factory.TaroLayoutFactory;
 import scari.corp.taro.mapper.TaroMapper;
 import scari.corp.taro.processor.SelectedCard;
@@ -28,24 +29,24 @@ import java.util.List;
  * Координирует процессы загрузки колоды, выбора процессора расклада через фабрику,
  * создания агрегирующей сущности расклада и передачи карт на асинхронное фоновое сохранение.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaroService {
 
     private final TaroCacheService taroCacheService;
     private final TaroLayoutRepository taroLayoutRepository;
-    private final TaroHistoryAsyncService taroHistoryAsyncService;
     private final UserRepository userRepository;
     private final TaroMapper taroMapper;
     private final TaroLayoutFactory taroLayoutFactory;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     /**
-     * Генерирует расклад карт Таро, сохраняет его структуру и инициирует асинхронную запись карт.
+     * Генерирует расклад карт Таро, сохраняет его каркас и публикует событие для фоновой обработки.
      * <p>
-     * Метод работает по принципу минимизации задержек: синхронно создается только пустая
-     * структура расклада {@link TaroLayout} для получения ID. Наполнение расклада картами
-     * делегируется асинхронному сервису в фоновый пул потоков.
+     * Метод работает по принципу минимизации задержек (Low Latency): синхронно создается только пустая
+     * структура расклада {@link TaroLayout} для получения ID. Дальнейшее наполнение расклада картами
+     * происходит реактивно посредством публикации доменного события {@link TaroLayoutCreatedEvent}.
      *
      * @param username   имя авторизованного пользователя (null для гостей)
      * @param sessionId  идентификатор текущей гостевой веб-сессии
@@ -74,14 +75,7 @@ public class TaroService {
 
         TaroLayout savedLayout = taroLayoutRepository.save(layoutBuilder.build());
 
-        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-                new org.springframework.transaction.support.TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        taroHistoryAsyncService.saveLayoutCardsAsync(savedLayout.getId(), selectedCards);
-                    }
-                }
-        );
+        eventPublisher.publishEvent(new TaroLayoutCreatedEvent(this, savedLayout.getId(), selectedCards));
 
         return selectedCards.stream()
                 .map(item -> taroMapper.toCardResponseDto(item.card(), item.isReversed()))
