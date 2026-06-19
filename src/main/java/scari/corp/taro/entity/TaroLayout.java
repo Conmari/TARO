@@ -13,10 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "taro_layouts", indexes = {
-        @Index(name = "idx_layout_user_date", columnList = "user_id, created_at DESC"),
-        @Index(name = "idx_layout_session_date", columnList = "session_id, created_at DESC")
-})
+@Table(name = "taro_layouts")
 @Data
 @Builder
 @NoArgsConstructor
