@@ -15,10 +15,8 @@ import scari.corp.taro.entity.User;
 @Repository
 public interface TaroLayoutRepository extends JpaRepository<TaroLayout, Long> {
 
-    @EntityGraph(attributePaths = {"cards", "cards.card"})
     Page<TaroLayout> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"cards", "cards.card"})
     Page<TaroLayout> findBySessionIdOrderByCreatedAtDesc(String sessionId, Pageable pageable);
 
     @Modifying
