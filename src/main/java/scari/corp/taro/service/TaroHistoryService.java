@@ -11,6 +11,7 @@ import scari.corp.taro.entity.TaroLayout;
 import scari.corp.taro.processor.SelectedCard;
 import scari.corp.taro.repository.TaroHistoryRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,7 +28,7 @@ public class TaroHistoryService {
     private final TaroHistoryRepository taroHistoryRepository;
 
     @PersistenceContext
-    private final EntityManager entityManager;
+    private EntityManager entityManager;
 
     /**
      * Выполняет пакетную запись вытянутых карт для конкретного расклада.
@@ -44,6 +45,8 @@ public class TaroHistoryService {
     public void saveLayoutCards(Long layoutId, List<SelectedCard> selectedCards) {
         TaroLayout layoutProxy = entityManager.getReference(TaroLayout.class, layoutId);
 
+        List<TaroHistory> historyList = new ArrayList<>(selectedCards.size());
+
         for (int i = 0; i < selectedCards.size(); i++) {
             SelectedCard item = selectedCards.get(i);
             TaroCards cardProxy = entityManager.getReference(TaroCards.class, item.card().getId());
@@ -52,10 +55,12 @@ public class TaroHistoryService {
                     .layout(layoutProxy)
                     .card(cardProxy)
                     .isReversed(item.isReversed())
-                    .cardOrder(i)
+                    .cardOrder((short) i)
                     .build();
 
-            taroHistoryRepository.save(history);
+            historyList.add(history);
         }
+
+        taroHistoryRepository.saveAll(historyList);
     }
 }

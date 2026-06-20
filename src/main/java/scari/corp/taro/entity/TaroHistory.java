@@ -24,7 +24,7 @@ public class TaroHistory {
     private boolean isReversed;
 
     @Column(name = "card_order", nullable = false, columnDefinition = "integer default 0")
-    private int cardOrder;
+    private short cardOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "layout_id", nullable = false)

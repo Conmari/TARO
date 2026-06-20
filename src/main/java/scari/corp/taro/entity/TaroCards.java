@@ -18,7 +18,7 @@ public class TaroCards {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Short id;
 
     @Column(nullable = false, unique = true)
     private String nameEn;
@@ -31,7 +31,7 @@ public class TaroCards {
 
     private String suit;
 
-    private Integer number;
+    private Short number;
 
     @Embedded
     private Meanings meanings;

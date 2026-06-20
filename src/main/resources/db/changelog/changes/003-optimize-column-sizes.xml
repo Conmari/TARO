@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="3" author="dmitry">
+        <comment>Сжатие типов данных справочника карт и ограничение длин VARCHAR</comment>
+
+        <!-- Смена типов данных для id и number карт на SMALLINT (2 байта вместо 8 байт у BIGINT) -->
+        <modifyDataType tableName="taro_cards" columnName="id" newDataType="SMALLINT"/>
+        <modifyDataType tableName="taro_cards" columnName="number" newDataType="SMALLINT"/>
+
+        <!-- Синхронизация типов в промежуточной таблице истории -->
+        <modifyDataType tableName="taro_history" columnName="card_id" newDataType="SMALLINT"/>
+        <modifyDataType tableName="taro_history" columnName="card_order" newDataType="SMALLINT"/>
+
+        <!-- Выставление максимального размера для столбцов-->
+        <modifyDataType tableName="taro_cards" columnName="name_en" newDataType="VARCHAR(100)"/>
+        <modifyDataType tableName="taro_cards" columnName="name_ru" newDataType="VARCHAR(100)"/>
+        <modifyDataType tableName="taro_cards" columnName="image_key" newDataType="VARCHAR(64)"/>
+        <modifyDataType tableName="taro_layouts" columnName="session_id" newDataType="VARCHAR(64)"/>
+    </changeSet>
+
+</databaseChangeLog>
