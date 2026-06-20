@@ -2,14 +2,16 @@ package scari.corp.taro.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import scari.corp.taro.embeddable.Meanings;
 import scari.corp.taro.enums.Arcana;
 
 @Entity
 @Table(name = "taro_cards")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaroCards {
