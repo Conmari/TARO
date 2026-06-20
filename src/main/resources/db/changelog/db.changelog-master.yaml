@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-drop-layout-type-constraint.xml
   - include:
       file: db/changelog/changes/003-optimize-column-sizes.xml
+  - include:
+      file: db/changelog/changes/004-create-indexes.xml
