@@ -1,10 +1,7 @@
 package scari.corp.taro.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import scari.corp.taro.enums.LayoutType;
 
@@ -13,11 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "taro_layouts", indexes = {
-        @Index(name = "idx_layout_user_date", columnList = "user_id, created_at DESC"),
-        @Index(name = "idx_layout_session_date", columnList = "session_id, created_at DESC")
-})
-@Data
+@Table(name = "taro_layouts")
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

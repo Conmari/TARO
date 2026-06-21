@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- 1. Удаление старых неэффективных индексов из начальной схемы -->
+    <changeSet id="4.1-drop-old-duplicate-indexes" author="dmitry">
+        <comment>Удаляем старые индексы, заменяются на частичные</comment>
+        <dropIndex tableName="taro_layouts" indexName="idx_layout_user_date"/>
+        <dropIndex tableName="taro_layouts" indexName="idx_layout_session_date"/>
+        <rollback>
+            <createIndex indexName="idx_layout_user_date" tableName="taro_layouts">
+                <column name="user_id"/>
+                <column name="created_at" descending="true"/>
+            </createIndex>
+            <createIndex indexName="idx_layout_session_date" tableName="taro_layouts">
+                <column name="session_id"/>
+                <column name="created_at" descending="true"/>
+            </createIndex>
+        </rollback>
+    </changeSet>
+
+    <!-- 2. Индекс для связки истории и расклада -->
+    <changeSet id="4.2-create-index-taro-history-layout-order" author="dmitry">
+        <comment>Ускоряет загрузку карт внутри расклада в правильном порядке</comment>
+        <createIndex indexName="idx_taro_history_layout_order" tableName="taro_history">
+            <column name="layout_id"/>
+            <column name="card_order"/>
+        </createIndex>
+        <rollback>
+            <dropIndex indexName="idx_taro_history_layout_order" tableName="taro_history"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 3. Одиночный индекс по картам -->
+    <changeSet id="4.3-create-index-taro-history-card" author="dmitry">
+        <createIndex indexName="idx_taro_history_card" tableName="taro_history">
+            <column name="card_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex indexName="idx_taro_history_card" tableName="taro_history"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 4. Индекс для истории авторизованного пользователя -->
+    <changeSet id="4.4-create-index-taro-layouts-user-created" author="dmitry" dbms="postgresql">
+        <comment>Индекс для авторизованных пользователей, исключая гостей</comment>
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_taro_layouts_user_created_not_null
+                ON taro_layouts (user_id, created_at DESC)
+                WHERE user_id IS NOT NULL;
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS idx_taro_layouts_user_created_not_null;
+        </rollback>
+    </changeSet>
+
+    <!-- 5. Индекс для гостевых сессий-->
+    <changeSet id="4.5-create-index-taro-layouts-session-created" author="dmitry" dbms="postgresql">
+        <comment>Индекс для гостей, автоматически худеет при авторизации сессии</comment>
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_taro_layouts_session_guest_created
+                ON taro_layouts (session_id, created_at DESC)
+                WHERE user_id IS NULL;
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS idx_taro_layouts_session_guest_created;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

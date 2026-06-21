@@ -1,14 +1,12 @@
 package scari.corp.taro.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "taro_history")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +24,7 @@ public class TaroHistory {
     private boolean isReversed;
 
     @Column(name = "card_order", nullable = false, columnDefinition = "integer default 0")
-    private int cardOrder;
+    private short cardOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "layout_id", nullable = false)

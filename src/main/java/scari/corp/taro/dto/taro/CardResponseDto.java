@@ -19,7 +19,7 @@ public record CardResponseDto(
         String nameRu,
         String arcana,
         String suit,
-        Integer number,
+        Short number,
         boolean isReversed,
         String interpretation,
         String imageKey

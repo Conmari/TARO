@@ -2,21 +2,23 @@ package scari.corp.taro.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import scari.corp.taro.embeddable.Meanings;
 import scari.corp.taro.enums.Arcana;
 
 @Entity
 @Table(name = "taro_cards")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaroCards {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Short id;
 
     @Column(nullable = false, unique = true)
     private String nameEn;
@@ -29,7 +31,7 @@ public class TaroCards {
 
     private String suit;
 
-    private Integer number;
+    private Short number;
 
     @Embedded
     private Meanings meanings;
