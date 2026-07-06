@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/003-optimize-column-sizes.xml
   - include:
       file: db/changelog/changes/004-create-indexes.xml
+  - include:
+      file: db/changelog/changes/005-create-user-accounts-table.xml
