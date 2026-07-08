@@ -88,7 +88,7 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
      * Метод для конвертации.
      * Изолирует логику отрисовки интерфейса Telegram от бизнес-логики команд.
      */
-    private SendMessage convertToTelegramMessage(BotResponse response) {
+    private static SendMessage convertToTelegramMessage(BotResponse response) {
         SendMessage.SendMessageBuilder builder = SendMessage.builder()
                 .chatId(response.destinationId())
                 .text(response.text())
@@ -106,9 +106,7 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
                 currentRow.add(new KeyboardButton(btnText));
             }
 
-            if (!currentRow.isEmpty()) {
-                keyboard.add(currentRow);
-            }
+            keyboard.add(currentRow);
 
             builder.replyMarkup(ReplyKeyboardMarkup.builder()
                     .keyboard(keyboard)
