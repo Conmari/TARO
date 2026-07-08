@@ -216,6 +216,20 @@
         <div id="authError" class="error-msg" style="display: none;"></div>
     </div>
 
+    <!-- Блок интеграции с Telegram (Показывается только авторизованным в ЛК) -->
+    <div id="integrationsBlock" class="card" style="display: none;">
+        <h3>🤖 Интеграция с Telegram-ботом</h3>
+        <div class="auth-form">
+            <p style="margin: 0 0 10px 0; color: #aaa; width: 100%;">
+                Введите 6-значный код из бота, чтобы смотреть историю гаданий и на сайте, и в мессенджере:
+            </p>
+            <input type="text" id="tgLinkCode" placeholder="Код из бота (например: 458219)" maxlength="6" style="width: 250px;">
+            <button id="submitTgCodeBtn" class="refresh-btn">🔑 Привязать Telegram</button>
+        </div>
+        <div id="tgLinkSuccess" style="color: #2ecc71; margin-top: 10px; display: none; font-weight: bold;"></div>
+        <div id="tgLinkError" class="error-msg" style="display: none;"></div>
+    </div>
+
     <!-- Кнопки управления -->
     <div style="text-align: center; margin: 20px 0;">
         <select id="layoutTypeSelect">
@@ -275,7 +289,7 @@
             data = {message: await res.text()};
         }
         if (!res.ok) {
-            const err = new Error(data.message || `Ошибка ${res.status}`);
+            const err = new Error(data.error || data.message || `Ошибка ${res.status}`);
             err.status = res.status;
             throw err;
         }
@@ -297,14 +311,19 @@
         const isAuth = await checkAuth();
         const widget = document.getElementById('userWidget');
         const authBlock = document.getElementById('authBlock');
+        const integrationsBlock = document.getElementById('integrationsBlock');
+
         if (isAuth && currentUser) {
             widget.innerHTML = `<span>👤 ${escapeHtml(currentUser)}</span> <button id="logoutBtn" class="logout-btn">Выйти</button>`;
             authBlock.style.display = 'none';
+            if (integrationsBlock) integrationsBlock.style.display = 'block';
+
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) logoutBtn.onclick = logout;
         } else {
             widget.innerHTML = `<span>🔒 Не авторизован</span>`;
             authBlock.style.display = 'block';
+            if (integrationsBlock) integrationsBlock.style.display = 'none'; // Прячем привязку, если гость
         }
     }
 
@@ -327,7 +346,7 @@
             if (content.length === 0) {
                 if (currentPage === 0) container.innerHTML = '<p>📭 История пуста. Вытяните первую карту!</p>';
                 hasMore = false;
-                isLoading = false;
+                removeMoreButton();
                 return;
             }
             allHistory = allHistory.concat(content);
@@ -343,10 +362,7 @@
 
     function renderHistory(history) {
         const container = document.getElementById('historyList');
-        if (!history || history.length === 0) {
-            container.innerHTML = '<p>📭 История пуста. Вытяните первую карту!</p>';
-            return;
-        }
+        container.innerHTML = '';
 
         // Бэкенд теперь сам присылает готовые расклады TaroHistoryResponseDto.
         // Мы просто перебираем их напрямую, без костыльных группировок!
@@ -395,9 +411,16 @@
                 `;
             }).join('');
 
-            const isTriple = layout.layoutType === 'THREE_CARDS';
-            const itemStyle = isTriple ? 'border-left: 4px solid #3498db; background: #1f1f2e;' : 'border-left: 4px solid #6c5ce7;';
-            const titleText = isTriple ? '🔮 Расклад из 3 карт' : '🎴 Карта дня';
+            let titleText = '🎴 Карта дня';
+            let itemStyle = 'border-left: 4px solid #2ecc71;';
+            if (layout.layoutType === 'THREE_CARDS') {
+                titleText = '🔮 Расклад из 3 карт';
+                itemStyle = 'border-left: 4px solid #3498db; background: #1f1f2e;';
+            } else if (layout.layoutType === 'CELTIC_CROSS') {
+                titleText = '📐 Кельтский крест (10 карт)';
+                itemStyle = 'border-left: 4px solid #9b59b6; background: #231f32;';
+            }
+
             const date = new Date(layout.createdAt).toLocaleString();
 
             return `
@@ -424,11 +447,18 @@
         }
     }
 
+    function removeMoreButton() {
+        const btn = document.getElementById('loadMoreBtn');
+        if (btn) btn.remove();
+    }
+
+    // Вытягивание карт и динамический физический разворот через CSS
     async function drawCard() {
         const cardDiv = document.getElementById('cardContent');
         const drawBtn = document.getElementById('drawCardBtn');
         const layoutType = document.getElementById('layoutTypeSelect').value;
 
+        drawBtn.disabled = true;
         cardDiv.innerHTML = '✨ Перемешиваем колоду и открываем тайны...';
 
         try {
@@ -469,13 +499,13 @@
                         <div style="margin: 15px 0; overflow: hidden; border-radius: 12px;">
                             <img src="/images/taro-cards/${card.imageKey}"
                                  alt="${escapeHtml(card.nameRu)}"
-                                 class="${rotationClass}"
+                                 class="card-icon ${rotationClass}"
                                  style="width: 100%; max-width: 130px; height: auto; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.6); transition: transform 0.5s ease;">
                         </div>
 
                         <div style="font-size:1.3rem; font-weight:bold; color:#ffb347; margin-top: 10px;">${escapeHtml(card.nameRu)}</div>
                         <div style="font-size:0.8rem; color:#aaa; margin: 4px 0 10px 0;">
-                            ${card.arcana} ${card.suit ? '· ' + escapeHtml(card.suit) : ''} · №${card.number}
+                            ${escapeHtml(card.arcana)} ${card.suit ? '· ' + escapeHtml(card.suit) : ''} · №${card.number}
                         </div>
                         <div style="font-size:0.9rem; text-align:left; border-top:1px solid #444; padding-top:10px; line-height:1.4;">
                             <strong>${positionTitle}:</strong> ${escapeHtml(card.interpretation)}
@@ -494,6 +524,9 @@
             } else {
                 cardDiv.innerHTML = `<div class="error-msg">❌ ${escapeHtml(err.message)}</div>`;
             }
+        } finally {
+            // Возвращаем кнопку в рабочее состояние
+            drawBtn.disabled = false;
         }
     }
 
@@ -560,13 +593,45 @@
 
     function showAuthError(msg) {
         const div = document.getElementById('authError');
+        if (div) {
         div.textContent = msg;
         div.style.display = 'block';
         setTimeout(() => div.style.display = 'none', 4000);
     }
+    }
 
+    // Сетевой метод отправки ПИН-кода из бота на бэкенд
+    async function handleTelegramLink() {
+        const codeInput = document.getElementById('tgLinkCode');
+        const successDiv = document.getElementById('tgLinkSuccess');
+        const errorDiv = document.getElementById('tgLinkError');
+        const code = codeInput.value.trim();
+
+        if (!code) return;
+        successDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        try {
+            const res = await apiRequest('/api/v1/user/connections/telegram', 'POST', { code });
+            successDiv.innerHTML = `🎉 <b>${escapeHtml(res.message)}</b>`;
+            successDiv.style.display = 'block';
+            codeInput.value = '';
+
+            // Сразу же обновляем ленту истории на сайте — в неё подтянутся расклады из бота!
+            await loadHistory(true);
+        } catch (err) {
+            errorDiv.textContent = err.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    // Навешивание обработчиков событий после полной сборки DOM браузером
+    window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('drawCardBtn').onclick = drawCard;
     document.getElementById('refreshHistoryBtn').onclick = () => loadHistory(true);
+
+        const submitCodeBtn = document.getElementById('submitTgCodeBtn');
+        if (submitCodeBtn) submitCodeBtn.onclick = handleTelegramLink;
 
     document.getElementById('loginBtn').onclick = async () => {
         const u = document.getElementById('loginUsername').value.trim();
@@ -596,8 +661,10 @@
         }
     };
 
-    updateUserWidget();
-    loadHistory(true);
+        // Запуск первичного рендеринга Личного Кабинета
+        await updateUserWidget();
+        await loadHistory(true);
+    });
 </script>
 </body>
 </html>
