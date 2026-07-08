@@ -59,7 +59,6 @@ public class LinkCodeService {
         String newCode = String.valueOf(100000 + secureRandom.nextInt(900000));
         LinkCodeDetails details = new LinkCodeDetails(provider, providerId);
 
-        userToCodeIndex.compute(providerId, (id, oldCode) -> {
         userToCodeIndex.compute(providerId, (_, oldCode) -> {
             if (oldCode != null) {
                 codeCache.invalidate(oldCode);
