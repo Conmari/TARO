@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scari.corp.taro.bot.dto.BotResponse;
 import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
-import scari.corp.taro.enums.BotProvider;
 import scari.corp.taro.facade.TaroBotFacade;
 
 import java.time.format.DateTimeFormatter;
@@ -30,7 +29,7 @@ public class HistoryCommand implements BotCommand {
     @Override
     public BotResponse apply(String text, String destinationId, String username, String sessionId) {
         try {
-            List<TaroHistoryResponseDto> history = taroFacade.getLatestReadingsDynamic(BotProvider.TELEGRAM, destinationId, 4);
+            List<TaroHistoryResponseDto> history = taroFacade.getLatestReadingsDynamic(username, sessionId, 4);
 
             if (history.isEmpty()) {
                 return BotResponse.builder()

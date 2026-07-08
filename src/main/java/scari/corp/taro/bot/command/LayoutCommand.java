@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scari.corp.taro.bot.dto.BotResponse;
 import scari.corp.taro.dto.taro.CardResponseDto;
-import scari.corp.taro.enums.BotProvider;
 import scari.corp.taro.enums.LayoutType;
 import scari.corp.taro.facade.TaroBotFacade;
 
@@ -40,7 +39,7 @@ public class LayoutCommand implements BotCommand {
         if (StartCommand.BTN_CELTIC_CROSS.equals(text)) layoutType = LayoutType.CELTIC_CROSS;
 
         try {
-            List<CardResponseDto> layoutCards = taroFacade.executeLayoutDynamic(BotProvider.TELEGRAM, destinationId, layoutType);
+            List<CardResponseDto> layoutCards = taroFacade.executeLayoutDynamic(username, sessionId, layoutType);
 
             StringBuilder response = new StringBuilder();
             response.append("✨ *Ваш расклад готов: ").append(layoutType.name()).append("* ✨\n\n");
