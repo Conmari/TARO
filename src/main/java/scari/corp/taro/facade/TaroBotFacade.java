@@ -39,6 +39,13 @@ public class TaroBotFacade {
     }
 
     /**
+     * Генерирует строковый id гостевой сессии.
+     */
+    public String generateSessionId(BotProvider provider, String providerId) {
+        return userService.generateSessionId(provider, providerId);
+    }
+
+    /**
      * Генерирует новый расклад карт Таро.
      * <p>
      * Принимает очищенные параметры сессии и пользователя напрямую от вызывающей стороны
