@@ -7,7 +7,7 @@ import scari.corp.taro.enums.BotProvider;
 import scari.corp.taro.facade.TaroBotFacade;
 
 /**
- * Обработчик команд для генерации одноразовых кодов авторизации.
+ * Команда генерации одноразовых кодов авторизации.
  * <p>
  * Генерирует защищенный 6-значный код для ввода в Личном Кабинете на сайте.
  */
@@ -26,12 +26,16 @@ public class LinkCommand implements BotCommand {
     public BotResponse apply(String text, String destinationId, String username, String sessionId) {
         String code = taroFacade.generateLinkCodeForChat(BotProvider.TELEGRAM, destinationId);
 
-        String messageText = "🔑 *Ваш код для привязки к сайту:* `" + code + "`\n\n" +
-                "🤖 Чтобы объединить историю гаданий в боте и на сайте:\n" +
-                "1. Зайдите на сайт под своим логином.\n" +
-                "2. Перейдите в Личный кабинет -> Интеграции.\n" +
-                "3. Введите этот 6-значный код.\n\n" +
-                "⏱ _Код действителен в течение 5 минут и является одноразовым._";
+        String messageText = """
+                🔑 <b>Ваш код для привязки к сайту:</b> <code>%s</code>
+                
+                🤖 Чтобы объединить историю гаданий в боте и на сайте:
+                1. Зайдите на сайт под своим логином.
+                2. Перейдите в Личный кабинет -> Подключения.
+                3. Введите этот 6-значный код.
+                
+                ⏱ <i>Код действителен в течение 5 минут и является одноразовым.</i>
+                """.formatted(code);
 
         return BotResponse.builder()
                 .destinationId(destinationId)

@@ -34,25 +34,36 @@ public class HistoryCommand implements BotCommand {
             if (history.isEmpty()) {
                 return BotResponse.builder()
                         .destinationId(destinationId)
-                        .text("📜 *У вас пока нет сохраненной истории раскладов.*\n\n" +
-                                "Сделайте свой первый расклад с помощью кнопок меню меню 👇")
+                        .text("""
+                                📜 <b>У вас пока нет сохраненной истории раскладов.</b>
+                                
+                                Сделайте свой первый расклад с помощью кнопок меню 👇""")
                         .build();
             }
 
             StringBuilder response = new StringBuilder();
-            response.append("📖 *Ваши последние расклады:*\n\n");
+            response.append("<b>📖 Ваши последние расклады:</b>\n\n");
 
             for (TaroHistoryResponseDto reading : history) {
-                response.append("🗓 *Расклад:* `").append(reading.layoutType().name()).append("`\n")
-                        .append("📅 *Дата:* _").append(reading.createdAt().format(DATE_FORMATTER)).append("_\n");
 
-                response.append("🎴 *Выпавшие карты:* ");
                 List<String> cardNames = reading.cards().stream()
-                        .map(card -> card.nameRu() + (card.isReversed() ? " 🔄 (обр.)" : " ⬆️"))
+                        .map(card -> "<code>" + card.nameRu() + "</code>" + (card.isReversed() ? " 🔄 (обр.)" : " ⬆️"))
                         .toList();
+                String cardsSummary = String.join(", ", cardNames);
 
-                response.append(String.join(", ", cardNames)).append("\n");
-                response.append("───────────────────\n\n");
+                String itemText = """
+                        <b>🗓 Расклад: </b> <code>%s</code>
+                        <b>📅 Дата:</b> <i>%s</i>
+                        <b>🎴 Выпавшие карты:</b> %s
+                        ───────────────────
+                        
+                        """.formatted(
+                        reading.layoutType().getTitle(),
+                        reading.createdAt().format(DATE_FORMATTER),
+                        cardsSummary
+                );
+
+                response.append(itemText);
             }
 
             return BotResponse.builder()

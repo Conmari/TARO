@@ -2,6 +2,7 @@ package scari.corp.taro.bot.command;
 
 import org.springframework.stereotype.Component;
 import scari.corp.taro.bot.dto.BotResponse;
+import scari.corp.taro.enums.LayoutType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +16,6 @@ import java.util.List;
 @Component
 public class StartCommand implements BotCommand {
 
-    public static final String BTN_ONE_CARD = "🔮 Карта дня (1 карта)";
-    public static final String BTN_THREE_CARDS = "📜 Прошлое / Настоящее / Будущее (3 карты)";
-    public static final String BTN_CELTIC_CROSS = "🎴 Кельтский крест (10 карт)";
     public static final String BTN_HISTORY = "📖 Моя история раскладов";
     public static final String BTN_LINK = "🔑 Привязать к сайту (/link)";
 
@@ -29,15 +27,16 @@ public class StartCommand implements BotCommand {
     @Override
     public BotResponse apply(String text, String destinationId, String username, String sessionId) {
         String welcomeText;
-        List<String> activeButtons = new ArrayList<>(List.of(
-                BTN_ONE_CARD,
-                BTN_THREE_CARDS,
-                BTN_CELTIC_CROSS,
-                BTN_HISTORY
-        ));
+        List<String> activeButtons = new ArrayList<>();
+
+        for (LayoutType type : LayoutType.values()) {
+            activeButtons.add(type.getButtonText());
+        }
+
+        activeButtons.add(BTN_HISTORY);
 
         if (username != null) {
-            welcomeText = "Рад видеть вас снова, " + username + "! ✨\nВыберите расклад:";
+            welcomeText = "Рад видеть вас снова, <b>" + username + "</b>! ✨\nВыберите расклад:";
         } else {
             welcomeText = "Приветствую! Я бот Таро. 🔮\nВыберите расклад или привяжите аккаунт:";
             activeButtons.add(BTN_LINK);

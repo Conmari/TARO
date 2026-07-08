@@ -25,44 +25,55 @@ public class LayoutCommand implements BotCommand {
 
     @Override
     public boolean canHandle(String input) {
-        return StartCommand.BTN_ONE_CARD.equals(input) ||
-                StartCommand.BTN_THREE_CARDS.equals(input) ||
-                StartCommand.BTN_CELTIC_CROSS.equals(input);
+        return LayoutType.fromButtonText(input).isPresent();
     }
 
     @Override
     public BotResponse apply(String text, String destinationId, String username, String sessionId) {
-        Long chatId = Long.parseLong(destinationId);
-
-        LayoutType layoutType = LayoutType.ONE_CARD;
-        if (StartCommand.BTN_THREE_CARDS.equals(text)) layoutType = LayoutType.THREE_CARDS;
-        if (StartCommand.BTN_CELTIC_CROSS.equals(text)) layoutType = LayoutType.CELTIC_CROSS;
+        LayoutType layoutType = LayoutType.fromButtonText(text).orElseThrow();
 
         try {
             List<CardResponseDto> layoutCards = taroFacade.executeLayoutDynamic(username, sessionId, layoutType);
 
-            StringBuilder response = new StringBuilder();
-            response.append("✨ *Ваш расклад готов: ").append(layoutType.name()).append("* ✨\n\n");
+            StringBuilder responseText = new StringBuilder(buildHeader(layoutType));
 
             for (int i = 0; i < layoutCards.size(); i++) {
-                CardResponseDto card = layoutCards.get(i);
-                response.append("• *Позиция ").append(i + 1).append(":* ")
-                        .append(card.nameRu()).append("\n")
-                        .append("  Положение: ").append(card.isReversed() ? "🙃 Перевернутое" : "➡️ Прямое").append("\n")
-                        .append("  📖 *Толкование:* ").append(card.interpretation()).append("\n\n");
+                String cardText = buildCardItemText(i + 1, layoutCards.get(i));
+                responseText.append(cardText);
             }
 
             return BotResponse.builder()
                     .destinationId(destinationId)
-                    .text(response.toString())
+                    .text(responseText.toString())
                     .build();
 
         } catch (Exception e) {
-            log.error("Ошибка генерации расклада в Telegram для чата {}", chatId, e);
+            log.error("Ошибка генерации расклада в Telegram для чата {}", destinationId, e);
             return BotResponse.builder()
                     .destinationId(destinationId)
                     .text("⚠️ Не удалось построить расклад. Пожалуйста, попробуйте еще раз.")
                     .build();
         }
+    }
+
+    private static String buildHeader(LayoutType layoutType) {
+        return "✨ <b>Ваш расклад готов: </b> <code>%s</code> ✨\n\n"
+                .formatted(layoutType.getTitle());
+    }
+
+    private static String buildCardItemText(int position, CardResponseDto card) {
+        String positionType = card.isReversed() ? "🙃 Перевернутое" : "➡️ Прямое";
+
+        return """
+                • <b>Позиция %d: </b> <code>%s</code>
+                  Положение: %s
+                  📖 <b>Толкование:</b> <i>%s</i>
+                
+                """.formatted(
+                position,
+                card.nameRu(),
+                positionType,
+                card.interpretation()
+        );
     }
 }
