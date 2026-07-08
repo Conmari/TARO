@@ -3,6 +3,7 @@ package scari.corp.taro.bot.command;
 import org.springframework.stereotype.Component;
 import scari.corp.taro.bot.dto.BotResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,17 +28,25 @@ public class StartCommand implements BotCommand {
 
     @Override
     public BotResponse apply(String text, String destinationId, String username, String sessionId) {
+        String welcomeText;
+        List<String> activeButtons = new ArrayList<>(List.of(
+                BTN_ONE_CARD,
+                BTN_THREE_CARDS,
+                BTN_CELTIC_CROSS,
+                BTN_HISTORY
+        ));
+
+        if (username != null) {
+            welcomeText = "Рад видеть вас снова, " + username + "! ✨\nВыберите расклад:";
+        } else {
+            welcomeText = "Приветствую! Я бот Таро. 🔮\nВыберите расклад или привяжите аккаунт:";
+            activeButtons.add(BTN_LINK);
+        }
+
         return BotResponse.builder()
                 .destinationId(destinationId)
-                .text("Приветствую! Я персональный бот предсказаний Таро. 🔮\n\n" +
-                        "Выберите нужный расклад или посмотрите историю на панели ниже:")
-                .buttons(List.of(
-                        BTN_ONE_CARD,
-                        BTN_THREE_CARDS,
-                        BTN_CELTIC_CROSS,
-                        BTN_HISTORY,
-                        BTN_LINK
-                ))
+                .text(welcomeText)
+                .buttons(activeButtons)
                 .build();
     }
 }
