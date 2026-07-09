@@ -133,4 +133,11 @@ public class TaroBotFacade {
             throw e;
         }
     }
+
+    /**
+     * Удаляет привязку мессенджера от профиля на сайте.
+     */
+    public void unlinkAccountOnWebSite(String webUsername, BotProvider provider) {
+        userService.unlinkAccount(webUsername, provider);
+    }
 }

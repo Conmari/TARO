@@ -219,13 +219,24 @@
     <!-- Блок интеграции с Telegram (Показывается только авторизованным в ЛК) -->
     <div id="integrationsBlock" class="card" style="display: none;">
         <h3>🤖 Интеграция с Telegram-ботом</h3>
-        <div class="auth-form">
+
+        <!-- Состояние 1: Форма привязки (для тех, у кого нет подключения) -->
+        <div id="tgUnlinkedState" class="auth-form">
             <p style="margin: 0 0 10px 0; color: #aaa; width: 100%;">
                 Введите 6-значный код из бота, чтобы смотреть историю гаданий и на сайте, и в мессенджере:
             </p>
             <input type="text" id="tgLinkCode" placeholder="Код из бота (например: 458219)" maxlength="6" style="width: 250px;">
             <button id="submitTgCodeBtn" class="refresh-btn">🔑 Привязать Telegram</button>
         </div>
+
+        <!-- Состояние 2: Кнопка отвязки (показывается, если бот подключен) -->
+        <div id="tgLinkedState" style="display: none; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <p style="margin: 0; color: #2ecc71; font-weight: bold;">
+                ✅ Ваш профиль успешно связан с Telegram-ботом.
+            </p>
+            <button id="unlinkTgBtn" class="logout-btn" style="margin: 0;">❌ Отключить Telegram</button>
+        </div>
+
         <div id="tgLinkSuccess" style="color: #2ecc71; margin-top: 10px; display: none; font-weight: bold;"></div>
         <div id="tgLinkError" class="error-msg" style="display: none;"></div>
     </div>
@@ -314,16 +325,33 @@
         const integrationsBlock = document.getElementById('integrationsBlock');
 
         if (isAuth && currentUser) {
+            // Рендерим виджет пользователя
             widget.innerHTML = `<span>👤 ${escapeHtml(currentUser)}</span> <button id="logoutBtn" class="logout-btn">Выйти</button>`;
             authBlock.style.display = 'none';
             if (integrationsBlock) integrationsBlock.style.display = 'block';
 
+            // Навешиваем выход
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) logoutBtn.onclick = logout;
+
+            // ДИНАМИЧЕСКАЯ ПРОВЕРКА ИНТЕГРАЦИИ:
+            try {
+                // Делаем GET-запрос к бэкенду за статусом привязки
+                const statusRes = await apiRequest('/api/v1/user/connections/telegram/status', 'GET');
+
+                // Вызываем функцию переключения интерфейса (из предыдущего шага)
+                toggleTelegramUI(statusRes.isLinked);
+            } catch (err) {
+                console.error('Не удалось загрузить статус интеграции с Telegram:', err);
+                // В случае ошибки сети по умолчанию показываем форму привязки
+                toggleTelegramUI(false);
+            }
+
         } else {
+            // Если гость — приводим интерфейс в исходное состояние
             widget.innerHTML = `<span>🔒 Не авторизован</span>`;
             authBlock.style.display = 'block';
-            if (integrationsBlock) integrationsBlock.style.display = 'none'; // Прячем привязку, если гость
+            if (integrationsBlock) integrationsBlock.style.display = 'none';
         }
     }
 
@@ -625,6 +653,76 @@
         }
     }
 
+    // Вспомогательная функция переключения состояния видимости интеграции
+    function toggleTelegramUI(isLinked) {
+        const unlinkedState = document.getElementById('tgUnlinkedState');
+        const linkedState = document.getElementById('tgLinkedState');
+
+        if (isLinked) {
+            if (unlinkedState) unlinkedState.style.display = 'none';
+            if (linkedState) linkedState.style.display = 'flex';
+        } else {
+            if (unlinkedState) unlinkedState.style.display = 'flex';
+            if (linkedState) linkedState.style.display = 'none';
+        }
+    }
+
+    // Сетевой метод отправки ПИН-кода из бота на бэкенд (POST)
+    async function handleTelegramLink() {
+        const codeInput = document.getElementById('tgLinkCode');
+        const successDiv = document.getElementById('tgLinkSuccess');
+        const errorDiv = document.getElementById('tgLinkError');
+        const code = codeInput.value.trim();
+
+        if (!code) return;
+        successDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        try {
+            // Наш новый REST-путь
+            const res = await apiRequest('/api/v1/user/connections/telegram', 'POST', { code });
+            successDiv.innerHTML = `🎉 <b>${escapeHtml(res.message)}</b>`;
+            successDiv.style.display = 'block';
+            codeInput.value = '';
+
+            // Переключаем интерфейс на состояние "Привязано"
+            toggleTelegramUI(true);
+
+            // Сразу же обновляем ленту истории на сайте — в неё подтянутся расклады из бота!
+            await loadHistory(true);
+        } catch (err) {
+            errorDiv.textContent = err.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    // НОВЫЙ Сетевой метод для удаления привязки (DELETE)
+    async function handleTelegramUnlink() {
+        const successDiv = document.getElementById('tgLinkSuccess');
+        const errorDiv = document.getElementById('tgLinkError');
+
+        if (!confirm('Вы действительно хотите отключить Telegram-бота от вашего профиля?')) return;
+
+        successDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        try {
+            // Отправляем DELETE запрос на бэкенд
+            const res = await apiRequest('/api/v1/user/connections/telegram', 'DELETE');
+            successDiv.innerHTML = `ℹ️ <b>${escapeHtml(res.message)}</b>`;
+            successDiv.style.display = 'block';
+
+            // Возвращаем интерфейс в состояние формы ввода
+            toggleTelegramUI(false);
+
+            // Освежаем историю (растаскиваем сессии обратно, если бэкенд это предполагает)
+            await loadHistory(true);
+        } catch (err) {
+            errorDiv.textContent = err.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
     // Навешивание обработчиков событий после полной сборки DOM браузером
     window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('drawCardBtn').onclick = drawCard;
@@ -633,6 +731,18 @@
         const submitCodeBtn = document.getElementById('submitTgCodeBtn');
         if (submitCodeBtn) submitCodeBtn.onclick = handleTelegramLink;
 
+        // ИСПРАВЛЕНИЕ: Делегируем клик кнопки отвязки родительскому контейнеру.
+        // Это оживит кнопку "Отключить Telegram" и защитит её от "умирания" при перерисовке.
+        const integrationsBlock = document.getElementById('integrationsBlock');
+        if (integrationsBlock) {
+            integrationsBlock.onclick = function(event) {
+                if (event.target && event.target.id === 'unlinkTgBtn') {
+                    handleTelegramUnlink();
+                }
+            };
+        }
+
+        // Блок логина
     document.getElementById('loginBtn').onclick = async () => {
         const u = document.getElementById('loginUsername').value.trim();
         const p = document.getElementById('loginPassword').value.trim();
@@ -642,6 +752,9 @@
         }
         try {
             await login(u, p);
+                // Освежаем интерфейс и историю сразу после успешного входа
+                await updateUserWidget();
+                await loadHistory(true);
         } catch (e) {
             showAuthError(e.message);
         }
@@ -656,14 +769,21 @@
         }
         try {
             await register(u, p);
+                // Освежаем интерфейс после регистрации
+                await updateUserWidget();
+                await loadHistory(true);
         } catch (e) {
             showAuthError(e.message);
         }
     };
 
-        // Запуск первичного рендеринга Личного Кабинета
+        // Запуск первичного рендеринга Личного Кабинета при открытии страницы
+        try {
         await updateUserWidget();
         await loadHistory(true);
+        } catch (e) {
+            console.error('Ошибка инициализации данных приложения:', e);
+        }
     });
 </script>
 </body>

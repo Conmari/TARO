@@ -44,4 +44,12 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      */
     boolean existsByUserAndProvider(User user, String provider);
 
+    /**
+     * Удаляет связь между пользователем сайта и конкретной чат-платформой.
+     *
+     * @param user     сущность пользователя сайта
+     * @param provider строковое имя платформы (например, "TELEGRAM")
+     * @return количество удаленных записей (0 или 1)
+     */
+    int deleteByUserAndProvider(User user, String provider);
 }

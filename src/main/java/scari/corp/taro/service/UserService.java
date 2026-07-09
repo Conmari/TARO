@@ -78,4 +78,26 @@ public class UserService {
         log.info("[UserService] Аккаунт {}:{} успешно привязан к пользователю '{}'. История сессии {} перенесена.",
                 provider, providerId, webUsername, guestSessionId);
     }
+
+    /**
+     * Удаляет привязку внешнего аккаунта от профиля пользователя на сайте.
+     * История раскладов при этом не удаляется (она остается закрепленной за пользователем сайта).
+     *
+     * @param webUsername имя пользователя на сайте
+     * @param provider    тип отключаемой платформы
+     * @throws AccountIntegrationException если у пользователя не было активного подключения к этой платформе
+     */
+    @Transactional
+    public void unlinkAccount(String webUsername, BotProvider provider) {
+        User webUser = userRepository.findByUsername(webUsername)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь сайта не найден: " + webUsername));
+
+        int deletedRows = userAccountRepository.deleteByUserAndProvider(webUser, provider.name());
+
+        if (deletedRows == 0) {
+            throw new AccountIntegrationException("У вашего профиля нет активного подключения к " + provider.getTitle());
+        }
+
+        log.info("[UserService] От профиля '{}' успешно отключена платформа {}", webUsername, provider);
+    }
 }
