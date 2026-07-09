@@ -45,6 +45,7 @@ public class LayoutCommand implements BotCommand {
             return BotResponse.builder()
                     .destinationId(destinationId)
                     .text(responseText.toString())
+                    .buttons(StartCommand.buildMainMenu(username))
                     .build();
 
         } catch (Exception e) {
@@ -52,6 +53,7 @@ public class LayoutCommand implements BotCommand {
             return BotResponse.builder()
                     .destinationId(destinationId)
                     .text("⚠️ Не удалось построить расклад. Пожалуйста, попробуйте еще раз.")
+                    .buttons(StartCommand.buildMainMenu(username))
                     .build();
         }
     }

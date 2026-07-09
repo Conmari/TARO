@@ -17,7 +17,7 @@ import java.util.List;
 public class StartCommand implements BotCommand {
 
     public static final String BTN_HISTORY = "📖 Моя история раскладов";
-    public static final String BTN_LINK = "🔑 Привязать к сайту (/link)";
+    public static final String BTN_LINK = "🔑 Привязать к сайту";
 
     @Override
     public boolean canHandle(String input) {
@@ -26,26 +26,34 @@ public class StartCommand implements BotCommand {
 
     @Override
     public BotResponse apply(String text, String destinationId, String username, String sessionId) {
-        String welcomeText;
-        List<String> activeButtons = new ArrayList<>();
-
-        for (LayoutType type : LayoutType.values()) {
-            activeButtons.add(type.getButtonText());
-        }
-
-        activeButtons.add(BTN_HISTORY);
-
-        if (username != null) {
-            welcomeText = "Рад видеть вас снова, <b>" + username + "</b>! ✨\nВыберите расклад:";
-        } else {
-            welcomeText = "Приветствую! Я бот Таро. 🔮\nВыберите расклад или привяжите аккаунт:";
-            activeButtons.add(BTN_LINK);
-        }
+        String welcomeText = (username != null)
+                ? "Рад видеть вас снова, <b>" + username + "</b>! ✨\nВыберите расклад:"
+                : "Приветствую! Я бот Таро. 🔮\nВыберите расклад или привяжите аккаунт:";
 
         return BotResponse.builder()
                 .destinationId(destinationId)
                 .text(welcomeText)
-                .buttons(activeButtons)
+                .buttons(buildMainMenu(username))
                 .build();
+    }
+
+    /**
+     * Метод генерации меню.
+     * Возвращает правильную сетку кнопок в зависимости от того, авторизован юзер или нет.
+     */
+    public static List<List<String>> buildMainMenu(String username) {
+        List<List<String>> gridButtons = new ArrayList<>();
+
+        for (LayoutType type : LayoutType.values()) {
+            gridButtons.add(List.of(type.getButtonText()));
+        }
+
+        if (username != null) {
+            gridButtons.add(List.of(BTN_HISTORY));
+        } else {
+            gridButtons.add(List.of(BTN_HISTORY, BTN_LINK));
+        }
+
+        return gridButtons;
     }
 }

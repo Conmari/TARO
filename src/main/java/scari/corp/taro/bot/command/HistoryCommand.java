@@ -69,6 +69,7 @@ public class HistoryCommand implements BotCommand {
             return BotResponse.builder()
                     .destinationId(destinationId)
                     .text(response.toString())
+                    .buttons(StartCommand.buildMainMenu(username))
                     .build();
 
         } catch (Exception e) {
@@ -76,6 +77,7 @@ public class HistoryCommand implements BotCommand {
             return BotResponse.builder()
                     .destinationId(destinationId)
                     .text("⚠️ Не удалось загрузить историю раскладов. Пожалуйста, попробуйте позже.")
+                    .buttons(StartCommand.buildMainMenu(username))
                     .build();
         }
     }

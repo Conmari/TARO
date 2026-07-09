@@ -96,17 +96,14 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
 
         if (response.buttons() != null && !response.buttons().isEmpty()) {
             List<KeyboardRow> keyboard = new ArrayList<>();
-            KeyboardRow currentRow = new KeyboardRow();
 
-            for (String btnText : response.buttons()) {
-                if (currentRow.size() >= 2) {
-                    keyboard.add(currentRow);
-                    currentRow = new KeyboardRow();
+            for (List<String> rowButtons : response.buttons()) {
+                KeyboardRow currentRow = new KeyboardRow();
+                for (String btnText : rowButtons) {
+                    currentRow.add(new KeyboardButton(btnText));
                 }
-                currentRow.add(new KeyboardButton(btnText));
+                keyboard.add(currentRow);
             }
-
-            keyboard.add(currentRow);
 
             builder.replyMarkup(ReplyKeyboardMarkup.builder()
                     .keyboard(keyboard)
