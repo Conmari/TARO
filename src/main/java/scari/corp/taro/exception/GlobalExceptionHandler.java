@@ -23,4 +23,15 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(new ApiResponse(e.getMessage()));
     }
+
+    /**
+     * Перехватывает ошибки конфликта бизнес-логики (например, дубликаты привязок аккаунтов).
+     * Возвращает статус 409 Conflict.
+     */
+    @ExceptionHandler(AccountIntegrationException.class)
+    public ResponseEntity<ApiResponse> handleIllegalState(AccountIntegrationException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ApiResponse(e.getMessage()));
+    }
 }

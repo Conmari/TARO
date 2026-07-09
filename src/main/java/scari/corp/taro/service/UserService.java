@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.entity.UserAccount;
 import scari.corp.taro.enums.BotProvider;
+import scari.corp.taro.exception.AccountIntegrationException;
 import scari.corp.taro.repository.TaroLayoutRepository;
 import scari.corp.taro.repository.UserAccountRepository;
 import scari.corp.taro.repository.UserRepository;
@@ -57,7 +58,11 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь сайта не найден: " + webUsername));
 
         if (userAccountRepository.existsByProviderAndProviderUserId(provider.name(), providerId)) {
-            throw new IllegalStateException("Этот аккаунт " + provider + " уже привязан к другому профилю!");
+            throw new AccountIntegrationException("Этот аккаунт " + provider + " уже привязан к другому профилю!");
+        }
+
+        if (userAccountRepository.existsByUserAndProvider(webUser, provider.name())) {
+            throw new AccountIntegrationException("К вашему профилю уже привязан аккаунт " + provider + "!");
         }
 
         UserAccount newAccount = UserAccount.builder()

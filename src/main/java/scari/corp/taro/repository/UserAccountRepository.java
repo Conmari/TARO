@@ -33,4 +33,15 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @return {@code true}, если привязка существует в базе данных
      */
     boolean existsByProviderAndProviderUserId(String provider, String providerUserId);
+
+    /**
+     * Проверяет, подключен ли уже к данному пользователю сайта аккаунт конкретной платформы.
+     * Используется для соблюдения бизнес-логики: "Один профиль сайта — один бот внешней платформы".
+     *
+     * @param user     сущность авторизованного пользователя сайта
+     * @param provider строковое имя платформы {@code BotProvider.name()}
+     * @return {@code true}, если у пользователя уже есть интеграция с этой платформой
+     */
+    boolean existsByUserAndProvider(User user, String provider);
+
 }

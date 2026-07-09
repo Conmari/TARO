@@ -9,6 +9,7 @@ import scari.corp.taro.dto.taro.TaroHistoryResponseDto;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.enums.BotProvider;
 import scari.corp.taro.enums.LayoutType;
+import scari.corp.taro.exception.AccountIntegrationException;
 import scari.corp.taro.service.LinkCodeService;
 import scari.corp.taro.service.TaroService;
 import scari.corp.taro.service.UserService;
@@ -120,11 +121,15 @@ public class TaroBotFacade {
 
             linkCodeService.invalidateCode(inputCode);
 
-            log.info("[Фасад] Процесс интеграции полностью завершен для пользователя '{}'", webUsername);
+            log.info("[Фасад] Процесс привязки платформы завершен для пользователя '{}'", webUsername);
             return true;
 
+        } catch (AccountIntegrationException e) {
+            log.warn("[Фасад] Отмена привязки по правилам бизнес-логики: {}.", e.getMessage());
+            throw e;
+
         } catch (Exception e) {
-            log.error("[Фасад] Ошибка привязки аккаунта в БД. Код НЕ сгорел и доступен для повтора.", e);
+            log.error("[Фасад] Критическая системная ошибка привязки аккаунта.", e);
             throw e;
         }
     }
