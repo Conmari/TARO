@@ -14,5 +14,6 @@ import java.util.List;
 public record BotResponse(
         String destinationId,
         String text,
-        List<List<String>> buttons
+        List<List<String>> buttons,
+        List<String> imageUrls
 ) {}

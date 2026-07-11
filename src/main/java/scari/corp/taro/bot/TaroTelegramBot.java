@@ -1,12 +1,17 @@
 package scari.corp.taro.bot;
 
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
+import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -17,6 +22,7 @@ import scari.corp.taro.entity.User;
 import scari.corp.taro.enums.BotProvider;
 import scari.corp.taro.facade.TaroBotFacade;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,26 +32,29 @@ import java.util.Optional;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class TaroTelegramBot extends TelegramLongPollingBot {
+
+    public static final String PATH_TARO_CARDS = "static/images/taro-cards/";
 
     private final BotProperties botProperties;
     private final List<BotCommand> botCommands;
     private final TaroBotFacade taroFacade;
 
-    @PostConstruct
-    public void initLog() {
-        log.info("🤖 Бот успешно инициализирован со свойствами: {}", botProperties.telegram().name());
+    public TaroTelegramBot(BotProperties botProperties,
+                           List<BotCommand> botCommands,
+                           TaroBotFacade taroFacade) {
+        super(botProperties.telegram().token());
+
+        this.botProperties = botProperties;
+        this.botCommands = botCommands;
+        this.taroFacade = taroFacade;
+
+        log.info("[Telegram] Бот {} успешно инициализирован", botProperties.telegram().name());
     }
 
     @Override
     public String getBotUsername() {
         return this.botProperties.telegram().name();
-    }
-
-    @Override
-    public String getBotToken() {
-        return this.botProperties.telegram().token();
     }
 
     @Override
@@ -58,7 +67,6 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
         log.info("📩 Получено сообщение в боте: '{}' от чата {}", input, destinationId);
 
         Optional<User> userOpt = taroFacade.findUserByChatId(BotProvider.TELEGRAM, destinationId);
-
         String username = userOpt.map(User::getUsername).orElse(null);
         String sessionId = userOpt.isPresent() ? null : taroFacade.generateSessionId(BotProvider.TELEGRAM, destinationId);
 
@@ -66,21 +74,57 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
                 .filter(command -> command.canHandle(input))
                 .findFirst()
                 .map(command -> command.apply(input, destinationId, username, sessionId))
-                .orElse(null);
+                .orElseGet(() -> BotResponse.builder()
+                        .destinationId(destinationId)
+                        .text("Неизвестная команда. Пожалуйста, используйте кнопки меню.")
+                        .build());
 
-        if (responseMessage == null) {
-            responseMessage = BotResponse.builder()
-                    .destinationId(destinationId)
-                    .text("Неизвестная команда. Пожалуйста, используйте кнопки меню.")
-                    .build();
-        }
+        ReplyKeyboard fallbackMarkup = null;
 
         try {
             SendMessage sendMessage = convertToTelegramMessage(responseMessage);
+            if (sendMessage != null) {
+                fallbackMarkup = sendMessage.getReplyMarkup();
+            }
+
+            List<String> urls = responseMessage.imageUrls();
+            boolean isLayout = urls != null && !urls.isEmpty();
+
+            if (isLayout) {
+                sendPlaceholderMessage(destinationId);
+            }
+
+            if (isLayout) {
+                if (urls.size() == 1) {
+                    sendSinglePhoto(destinationId, urls.getFirst());
+                } else {
+                    sendAlbumPhoto(destinationId, urls);
+                }
+            }
+
             execute(sendMessage);
             log.info("📤 Ответ успешно отправлен в Телеграм чат {}", destinationId);
-        } catch (TelegramApiException e) {
-            log.error("❌ Ошибка отправки сообщения через execute() в чат {}: {}", destinationId, e.getMessage());
+
+        } catch (Exception e) {
+            log.error("[Telegram] Ошибка отправки в чат {}: {}", destinationId, e.getMessage(), e);
+            sendErrorFallback(destinationId, fallbackMarkup);
+        }
+    }
+
+    private void sendErrorFallback(String chatId, ReplyKeyboard replyMarkup) {
+        try {
+            var errorFallback = SendMessage.builder()
+                    .chatId(chatId)
+                    .text("""
+                            ⚠️ <b>Произошла ошибка при загрузке карт или отправке ответа.</b>
+                            Пожалуйста, попробуйте сделать расклад еще раз чуть позже.
+                            """)
+                    .parseMode("HTML")
+                    .replyMarkup(replyMarkup)
+                    .build();
+            execute(errorFallback);
+        } catch (TelegramApiException fallbackException) {
+            log.error("[Telegram] Не удалось отправить даже сообщение об ошибке в чат {}", chatId, fallbackException);
         }
     }
 
@@ -113,5 +157,79 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Отправляет одиночную картинку карты Таро.
+     */
+    private void sendSinglePhoto(String chatId, String imageKey) throws TelegramApiException {
+        String path = PATH_TARO_CARDS + imageKey;
+        ClassPathResource resource = new ClassPathResource(path);
+
+        try (InputStream is = resource.getInputStream()) {
+            SendPhoto sendPhoto = SendPhoto.builder()
+                    .chatId(chatId)
+                    .photo(new InputFile(is, imageKey))
+                    .build();
+
+            execute(sendPhoto);
+            log.debug("[Telegram] Одиночная карта {} успешно отправлена из resources в чат {}", imageKey, chatId);
+
+        } catch (Exception e) {
+            log.error("[Telegram] Не удалось прочитать картинку {} из папки resources: {}", imageKey, e.getMessage());
+            throw new TelegramApiException("Ошибка чтения файла изображения", e);
+        }
+    }
+
+    /**
+     * Отправляет пакет картинок в виде единого альбома.
+     */
+    private void sendAlbumPhoto(String chatId, List<String> imageKeys) throws TelegramApiException {
+        List<InputMedia> mediaGroup = new ArrayList<>();
+        List<InputStream> openStreams = new ArrayList<>();
+
+        try {
+            for (String key : imageKeys) {
+                String path = PATH_TARO_CARDS + key;
+                ClassPathResource resource = new ClassPathResource(path);
+                InputStream is = resource.getInputStream();
+                openStreams.add(is);
+
+                InputMediaPhoto photo = new InputMediaPhoto();
+                photo.setMedia(is, key);
+                mediaGroup.add(photo);
+            }
+
+            SendMediaGroup sendMediaGroup = SendMediaGroup.builder()
+                    .chatId(chatId)
+                    .medias(mediaGroup)
+                    .build();
+
+            execute(sendMediaGroup);
+            log.debug("[Telegram] Альбом из {} карт успешно отправлен из resources в чат {}", mediaGroup.size(), chatId);
+        } catch (Exception e) {
+            log.error("[Telegram] Ошибка сборки альбома карт из папки resources в чат {}: {}", chatId, e.getMessage());
+            throw new TelegramApiException("Ошибка отправки альбома изображений", e);
+        } finally {
+            for (InputStream is : openStreams) {
+                try {
+                    if (is != null) is.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Отправляет сообщение о начале генерации расклада.
+     */
+    private void sendPlaceholderMessage(String chatId) throws TelegramApiException {
+        SendMessage placeholder = SendMessage.builder()
+                .chatId(chatId)
+                .text("✨ <i>Перемешиваем колоду и открываем тайны...</i>")
+                .parseMode("HTML")
+                .build();
+
+        execute(placeholder);
     }
 }

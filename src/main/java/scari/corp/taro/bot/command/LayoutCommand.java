@@ -35,6 +35,10 @@ public class LayoutCommand implements BotCommand {
         try {
             List<CardResponseDto> layoutCards = taroFacade.executeLayoutDynamic(username, sessionId, layoutType);
 
+            List<String> imageUrls = layoutCards.stream()
+                    .map(CardResponseDto::imageKey)
+                    .toList();
+
             StringBuilder responseText = new StringBuilder(buildHeader(layoutType));
 
             for (int i = 0; i < layoutCards.size(); i++) {
@@ -45,6 +49,7 @@ public class LayoutCommand implements BotCommand {
             return BotResponse.builder()
                     .destinationId(destinationId)
                     .text(responseText.toString())
+                    .imageUrls(imageUrls)
                     .buttons(StartCommand.buildMainMenu(username))
                     .build();
 
