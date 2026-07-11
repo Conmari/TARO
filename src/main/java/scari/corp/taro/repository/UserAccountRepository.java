@@ -1,9 +1,11 @@
 package scari.corp.taro.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import scari.corp.taro.entity.User;
 import scari.corp.taro.entity.UserAccount;
 
@@ -22,7 +24,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @param providerUserId id пользователя внутри этой платформы
      * @return {@link Optional} с сущностью пользователя, если привязка существует
      */
-    @Query("SELECT a.user FROM UserAccount a JOIN a.user WHERE a.provider = :provider AND a.providerUserId = :providerUserId")
+    @Query("SELECT ua.user FROM UserAccount ua WHERE ua.provider = :provider AND ua.providerUserId = :providerUserId")
     Optional<User> findUserByAccountFields(@Param("provider") String provider, @Param("providerUserId") String providerUserId);
 
     /**
@@ -51,5 +53,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @param provider строковое имя платформы (например, "TELEGRAM")
      * @return количество удаленных записей (0 или 1)
      */
+    @Modifying(clearAutomatically = true)
+    @Transactional
     int deleteByUserAndProvider(User user, String provider);
 }
