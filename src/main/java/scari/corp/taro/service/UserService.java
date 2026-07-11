@@ -58,11 +58,11 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь сайта не найден: " + webUsername));
 
         if (userAccountRepository.existsByProviderAndProviderUserId(provider.name(), providerId)) {
-            throw new AccountIntegrationException("Этот аккаунт " + provider + " уже привязан к другому профилю!");
+            throw new AccountIntegrationException("Этот аккаунт " + provider.getTitle() + " уже привязан к другому профилю!");
         }
 
         if (userAccountRepository.existsByUserAndProvider(webUser, provider.name())) {
-            throw new AccountIntegrationException("К вашему профилю уже привязан аккаунт " + provider + "!");
+            throw new AccountIntegrationException("К вашему профилю уже привязан аккаунт " + provider.getTitle() + "!");
         }
 
         UserAccount newAccount = UserAccount.builder()
