@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.ActionType;
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -91,7 +93,12 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
             boolean isLayout = urls != null && !urls.isEmpty();
 
             if (isLayout) {
-                sendPlaceholderMessage(destinationId);
+                SendChatAction chatAction = SendChatAction.builder()
+                        .chatId(destinationId)
+                        .action(String.valueOf(ActionType.UPLOADPHOTO))
+                        .build();
+
+                execute(chatAction);
             }
 
             if (isLayout) {
@@ -215,18 +222,5 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
                 }
             }
         }
-    }
-
-    /**
-     * Отправляет сообщение о начале генерации расклада.
-     */
-    private void sendPlaceholderMessage(String chatId) throws TelegramApiException {
-        SendMessage placeholder = SendMessage.builder()
-                .chatId(chatId)
-                .text("✨ <i>Перемешиваем колоду и открываем тайны...</i>")
-                .parseMode("HTML")
-                .build();
-
-        execute(placeholder);
     }
 }
