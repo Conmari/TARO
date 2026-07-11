@@ -64,7 +64,7 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
         String input = update.getMessage().getText().trim();
         String destinationId = String.valueOf(update.getMessage().getChatId());
 
-        log.info("📩 Получено сообщение в боте: '{}' от чата {}", input, destinationId);
+        log.debug("📩 Получено сообщение в боте: '{}' от чата {}", input, destinationId);
 
         Optional<User> userOpt = taroFacade.findUserByChatId(BotProvider.TELEGRAM, destinationId);
         String username = userOpt.map(User::getUsername).orElse(null);
@@ -103,8 +103,6 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
             }
 
             execute(sendMessage);
-            log.info("📤 Ответ успешно отправлен в Телеграм чат {}", destinationId);
-
         } catch (Exception e) {
             log.error("[Telegram] Ошибка отправки в чат {}: {}", destinationId, e.getMessage(), e);
             sendErrorFallback(destinationId, fallbackMarkup);
@@ -174,7 +172,6 @@ public class TaroTelegramBot extends TelegramLongPollingBot {
 
             execute(sendPhoto);
             log.debug("[Telegram] Одиночная карта {} успешно отправлена из resources в чат {}", imageKey, chatId);
-
         } catch (Exception e) {
             log.error("[Telegram] Не удалось прочитать картинку {} из папки resources: {}", imageKey, e.getMessage());
             throw new TelegramApiException("Ошибка чтения файла изображения", e);

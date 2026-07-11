@@ -58,7 +58,7 @@ public class TaroBotFacade {
      * @return список DTO сгенерированных карт {@link CardResponseDto}
      */
     public List<CardResponseDto> executeLayoutDynamic(String username, String sessionId, LayoutType layoutType) {
-        log.info("[Фасад] Запрос расклада {}. Статус: {}",
+        log.debug("[Фасад] Запрос расклада {}. Статус: {}",
                 layoutType, (username != null ? "Авторизован (" + username + ")" : "Гость"));
 
         return taroService.generateLayout(username, sessionId, layoutType);
@@ -121,7 +121,6 @@ public class TaroBotFacade {
 
             linkCodeService.invalidateCode(inputCode);
 
-            log.info("[Фасад] Процесс привязки платформы завершен для пользователя '{}'", webUsername);
             return true;
 
         } catch (AccountIntegrationException e) {

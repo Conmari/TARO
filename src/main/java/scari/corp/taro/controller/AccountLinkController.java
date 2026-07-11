@@ -53,7 +53,6 @@ public class AccountLinkController {
             Principal principal) {
 
         String webUsername = principal.getName();
-        log.info("[API Сайта] Запрос привязки Telegram от пользователя '{}'", webUsername);
 
         boolean isLinked = taroFacade.confirmLinkOnWebSite(webUsername, request.code());
 
@@ -74,7 +73,6 @@ public class AccountLinkController {
     @DeleteMapping("/telegram")
     public ResponseEntity<ApiResponse> unlinkTelegramAccount(Principal principal) {
         String webUsername = principal.getName();
-        log.info("[API Сайта] Запрос на отключение Telegram от пользователя '{}'", webUsername);
 
         taroFacade.unlinkAccountOnWebSite(webUsername, BotProvider.TELEGRAM);
 

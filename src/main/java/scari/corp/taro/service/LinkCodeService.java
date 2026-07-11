@@ -68,7 +68,7 @@ public class LinkCodeService {
             return newCode;
         });
 
-        log.info("[LinkCodeService] Сгенерирован код привязки для платформы {} (ID: {})", provider, providerId);
+        log.debug("[LinkCodeService] Сгенерирован код привязки для платформы {} (ID: {})", provider, providerId);
         return newCode;
     }
 
