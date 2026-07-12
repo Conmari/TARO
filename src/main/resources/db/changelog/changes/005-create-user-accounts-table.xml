@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="5.0-create-user-accounts-table" author="dmitry">
+        <comment>Создание таблицы user_accounts для привязки мессенджеров</comment>
+
+        <createTable tableName="user_accounts">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="provider" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_user_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="user_accounts"
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_account_user"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex indexName="uk_user_accounts_provider_user" tableName="user_accounts" unique="true">
+            <column name="provider"/>
+            <column name="provider_user_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
