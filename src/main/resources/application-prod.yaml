@@ -1,0 +1,30 @@
+spring:
+  jpa:
+    # Строгий запрет на любые изменения схемы базы данных со стороны Hibernate
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    # Логирование
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  datasource:
+  # Оптимизация пула соединений базы данных HikariCP
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+# Позволяет Spring правильно обрабатывать HTTPS заголовки от Nginx
+server:
+  forward-headers-strategy: native
+
+logging:
+  level:
+    root: WARN
+    org:
+      hibernate:
+        SQL: ERROR

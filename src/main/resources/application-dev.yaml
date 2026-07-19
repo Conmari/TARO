@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    # Строгий запрет на любые изменения схемы базы данных со стороны Hibernate
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    # Красивое логирование SQL-запросов в консоль для отладки
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+    # Полезные логи работы Liquibase в режиме разработки
+    liquibase: INFO
