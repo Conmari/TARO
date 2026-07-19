@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: TARO
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5431/taro_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  # Настройки для Liquibase
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  # Настройки кэширования Caffeine
+  cache:
+    caffeine:
+      spec: expireAfterWrite=60m
+
+  # Настройка Hibernate
+  jpa:
+    properties:
+      hibernate:
+      # Включаем пакетную вставку
+      jdbc:
+      batch_size: 25
+      # Группировать одинаковые INSERT запросы в один пакет
+      order_inserts: true
+      # Размер пакета на чтение
+      default_batch_fetch_size: 30
+
+bots:
+  telegram:
+    name: MyTaroReadingBot
+    token: ${TELEGRAM_TOKEN}
+
+  # Базовый паттерн логирования в консоль
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
